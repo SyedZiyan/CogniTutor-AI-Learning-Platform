@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CogniTutor — Personal AI Learning Platform</title>
+  <link rel="icon" type="image/svg+xml" href="/static/assets/favicon.svg">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Human-Crafted CSS -->
+  <link rel="stylesheet" href="/static/css/style.css">
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- KaTeX Math -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+
+  <!-- Marked.js -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+</head>
+<body class="bg-[#f8fafc] text-slate-900 min-h-screen flex flex-col font-sans">
+
+  <!-- TOP APP BAR -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 px-6 py-3 flex items-center justify-between shadow-sm">
+    <!-- Brand & Course Title -->
+    <div class="flex items-center gap-4">
+      <div class="flex items-center gap-2.5 cursor-pointer group" onclick="switchTab('dashboard')" title="CogniTutor AI Learning Platform">
+        <div class="relative w-9 h-9 rounded-xl overflow-hidden shadow-xs border border-slate-900/10 group-hover:scale-105 transition-transform duration-200 bg-slate-950 flex items-center justify-center">
+          <img src="/static/assets/logo.png" alt="CogniTutor Logo" class="w-full h-full object-cover">
+        </div>
+        <div class="flex flex-col">
+          <div class="flex items-center gap-1.5">
+            <span class="font-extrabold text-slate-900 text-base tracking-tight leading-none">Cogni<span class="text-blue-600">Tutor</span></span>
+            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold font-mono bg-blue-50 text-blue-700 border border-blue-200/80 leading-none">AI</span>
+          </div>
+          <span class="text-[10px] text-slate-400 font-medium tracking-tight">Personal Learning Copilot</span>
+        </div>
+      </div>
+
+      <div class="h-4 w-[1px] bg-slate-200 hidden sm:block"></div>
+
+      <!-- Active Course Pill -->
+      <div class="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 text-xs font-medium border border-slate-200/80">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+        <span>Course: Deep Learning & Neural Networks</span>
+      </div>
+    </div>
+
+    <!-- Student Stats & Quick Actions -->
+    <div class="flex items-center gap-3 sm:gap-4">
+      <!-- Voice Playing Pill -->
+      <div class="audio-wave-container hidden items-center gap-1.5 px-3 py-1 rounded-full bg-sky-50 border border-sky-200">
+        <div class="human-wave-bar"></div>
+        <div class="human-wave-bar"></div>
+        <div class="human-wave-bar"></div>
+        <div class="human-wave-bar"></div>
+        <span class="text-xs text-sky-700 font-medium ml-1">Voice Tutor Speaking...</span>
+      </div>
+
+      <!-- Streak Pill -->
+      <div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold">
+        <span class="text-sm">🔥</span>
+        <span id="header-streak-count">7 Day Streak</span>
+      </div>
+
+      <!-- XP Bar -->
+      <div class="hidden md:flex flex-col gap-1 w-36">
+        <div class="flex items-center justify-between text-[11px] text-slate-500">
+          <span id="header-level-badge" class="font-semibold text-slate-700">Level 12</span>
+          <span id="header-xp-text" class="font-mono">820 / 1000 XP</span>
+        </div>
+        <div class="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden border border-slate-200/60">
+          <div id="header-xp-bar" class="h-full bg-blue-600 rounded-full transition-all duration-300" style="width: 82%;"></div>
+        </div>
+      </div>
+
+      <!-- Add Material Button -->
+      <button onclick="switchTab('documents')" class="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm transition">
+        <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+        <span>Add Notes</span>
+      </button>
+
+      <!-- Settings Icon -->
+      <button onclick="toggleSettingsDrawer()" title="Settings & API Keys" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition">
+        <i data-lucide="settings-2" class="w-4 h-4"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- SECONDARY CLEAN NAVIGATION BAR -->
+  <nav class="bg-white border-b border-slate-200 px-6 py-1.5 flex items-center gap-1.5 overflow-x-auto text-sm sticky top-[57px] z-20 shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
+    <button data-tab-target="dashboard" class="nav-tab-btn active">
+      <i data-lucide="layout-grid" class="w-4 h-4"></i>
+      <span>Overview & Weak Spots</span>
+    </button>
+
+    <button data-tab-target="tutor" class="nav-tab-btn">
+      <i data-lucide="message-square" class="w-4 h-4"></i>
+      <span>Ask My Notes (Q&A)</span>
+    </button>
+
+    <button data-tab-target="doubt" class="nav-tab-btn">
+      <i data-lucide="help-circle" class="w-4 h-4"></i>
+      <span>Explain Simply (3 Levels)</span>
+    </button>
+
+    <button data-tab-target="quiz" class="nav-tab-btn">
+      <i data-lucide="check-square" class="w-4 h-4"></i>
+      <span>Practice Quiz</span>
+    </button>
+
+    <button data-tab-target="roadmap" class="nav-tab-btn">
+      <i data-lucide="map" class="w-4 h-4"></i>
+      <span>Study Plan</span>
+    </button>
+
+    <button data-tab-target="graph" class="nav-tab-btn">
+      <i data-lucide="network" class="w-4 h-4"></i>
+      <span>Concept Graph</span>
+    </button>
+
+    <button data-tab-target="viva" class="nav-tab-btn">
+      <i data-lucide="mic" class="w-4 h-4 text-rose-600"></i>
+      <span>Socratic Viva</span>
+    </button>
+
+    <button data-tab-target="documents" class="nav-tab-btn">
+      <i data-lucide="folder" class="w-4 h-4"></i>
+      <span>My Materials</span>
+    </button>
+
+    <button data-tab-target="achievements" class="nav-tab-btn">
+      <i data-lucide="award" class="w-4 h-4"></i>
+      <span>Leaderboard</span>
+    </button>
+  </nav>
+
+  <!-- MAIN CONTENT CONTAINER -->
+  <main class="flex-1 max-w-6xl w-full mx-auto p-5 sm:p-8">
+
+    <!-- ================= TAB 1: OVERVIEW & WEAK SPOTS ================= -->
+    <section id="view-dashboard" class="tab-view space-y-6">
+
+      <!-- Friendly Study Greeting Banner -->
+      <div class="human-card p-6 border-l-4 border-l-blue-600 flex flex-col md:flex-row md:items-center justify-between gap-5 bg-gradient-to-r from-blue-50/50 via-white to-white">
+        <div class="max-w-2xl">
+          <div class="flex items-center gap-2 text-xs font-semibold text-blue-700 uppercase tracking-wide mb-1">
+            <span>Daily Study Snapshot</span>
+          </div>
+          <h2 class="text-xl font-bold text-slate-900">
+            Good evening! Here is your learning progress for today.
+          </h2>
+          <p class="text-sm text-slate-600 mt-1 leading-relaxed">
+            You are performing strongly in <strong>Neural Networks (85%)</strong> and <strong>CNNs (78%)</strong>, but <span class="text-rose-700 font-semibold bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">RNNs (42%)</span> need some practice before your next quiz.
+          </p>
+        </div>
+
+        <div class="flex items-center gap-2.5 shrink-0">
+          <button onclick="switchTab('doubt'); triggerDoubtSolver('lstm');" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition shadow-sm flex items-center gap-1.5">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+            <span>Review Weak Topic (RNN)</span>
+          </button>
+          <button onclick="switchTab('quiz')" class="px-4 py-2 rounded-lg bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 font-semibold text-xs transition shadow-sm flex items-center gap-1.5">
+            <i data-lucide="play" class="w-3.5 h-3.5 text-slate-500"></i>
+            <span>Quick Practice Quiz</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Key Numbers -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Knowledge Mastery -->
+        <div class="human-card p-5">
+          <div class="text-xs font-medium text-slate-500">Total Course Mastery</div>
+          <div class="mt-2 flex items-baseline gap-2">
+            <span id="dash-overall-progress" class="text-2xl font-bold text-slate-900">72%</span>
+            <span class="text-xs font-medium text-emerald-600">On Track</span>
+          </div>
+          <div class="mt-3 w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+            <div class="bg-blue-600 h-full rounded-full transition-all duration-300" style="width: 72%;"></div>
+          </div>
+        </div>
+
+        <!-- Strong Topic -->
+        <div class="human-card p-5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-medium text-slate-500">Strongest Subject</span>
+            <span class="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">85% Mastery</span>
+          </div>
+          <div class="mt-2">
+            <h4 id="dash-strongest-topic" class="text-base font-bold text-slate-900 truncate">Neural Networks</h4>
+            <p class="text-xs text-slate-500 mt-0.5">High consistency in activation functions</p>
+          </div>
+        </div>
+
+        <!-- Weak Topic -->
+        <div class="human-card p-5 border-l-4 border-l-rose-500">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-medium text-rose-700">Needs Improvement</span>
+            <span class="text-[11px] font-semibold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200">42% Score</span>
+          </div>
+          <div class="mt-2">
+            <h4 id="dash-weakest-topic" class="text-base font-bold text-slate-900 truncate">Recurrent Neural Networks (RNN)</h4>
+            <p class="text-xs text-slate-500 mt-0.5">Struggling with vanishing gradients</p>
+          </div>
+        </div>
+
+        <!-- Quizzes Completed -->
+        <div class="human-card p-5">
+          <div class="text-xs font-medium text-slate-500">Practice Quizzes Taken</div>
+          <div class="mt-2 flex items-baseline gap-2">
+            <span id="dash-quizzes-count" class="text-2xl font-bold text-slate-900">24</span>
+            <span class="text-xs font-medium text-slate-500">Avg. 78%</span>
+          </div>
+          <p class="text-xs text-slate-500 mt-2">Next adaptive test prepared</p>
+        </div>
+      </div>
+
+      <!-- Charts & Topic Scorecard -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Spider / Radar Chart -->
+        <div class="lg:col-span-5 human-card p-6 flex flex-col">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
+            <div>
+              <h3 class="font-bold text-sm text-slate-900">Knowledge Shape</h3>
+              <p class="text-xs text-slate-500">Mastery comparison across topics</p>
+            </div>
+            <span class="text-[11px] text-slate-400 font-medium">Target: 75%+</span>
+          </div>
+          <div class="relative flex-1 min-h-[260px]">
+            <canvas id="competency-radar-chart"></canvas>
+          </div>
+        </div>
+
+        <!-- Horizontal Progress Bars -->
+        <div class="lg:col-span-7 human-card p-6 flex flex-col">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
+            <div>
+              <h3 class="font-bold text-sm text-slate-900">Topic-by-Topic Breakdown</h3>
+              <p class="text-xs text-slate-500">Green = Strong (≥75%), Amber = Average, Red = Needs Review (&lt;50%)</p>
+            </div>
+          </div>
+          <div class="relative flex-1 min-h-[260px]">
+            <canvas id="competency-bars-chart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Diagnostic Assessment & Recommended Actions -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Summary Box -->
+        <div class="lg:col-span-5 human-card p-6">
+          <div class="flex items-center gap-2 mb-3">
+            <i data-lucide="file-text" class="w-4 h-4 text-blue-600"></i>
+            <h3 class="font-bold text-sm text-slate-900">Tutor Assessment Summary</h3>
+          </div>
+          <p id="dash-diagnostic-summary" class="text-xs text-slate-600 leading-relaxed font-normal">
+            Evaluating student assessments across all course materials...
+          </p>
+          <div class="mt-4 space-y-2" id="dash-topic-breakdown">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+
+        <!-- Action Items -->
+        <div class="lg:col-span-7 human-card p-6">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+            <div class="flex items-center gap-2">
+              <i data-lucide="check-circle" class="w-4 h-4 text-emerald-600"></i>
+              <h3 class="font-bold text-sm text-slate-900">Recommended Next Steps</h3>
+            </div>
+            <span class="text-xs text-slate-400">Based on your weak topics</span>
+          </div>
+          <div id="dash-recommendations-list" class="space-y-3">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ================= TAB 2: ASK MY NOTES (Q&A) ================= -->
+    <section id="view-tutor" class="tab-view hidden space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-200">
+        <div>
+          <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <i data-lucide="message-square" class="w-5 h-5 text-blue-600"></i>
+            <span>Ask My Notes (Document Q&A)</span>
+          </h2>
+          <p class="text-xs text-slate-500">Every response is strictly retrieved from your uploaded notes, with page and slide references.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-xs px-2.5 py-1 rounded bg-slate-100 text-slate-600 font-mono border border-slate-200">
+            Active: 4 Documents Loaded
+          </span>
+        </div>
+      </div>
+
+      <!-- 2-Column NotebookLM Style View -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Left: Loaded Source Documents -->
+        <div class="lg:col-span-4 human-card p-4 h-[calc(100vh-230px)] flex flex-col hidden lg:flex">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Source Materials</span>
+            <button onclick="switchTab('documents')" class="text-xs text-blue-600 hover:underline font-semibold">+ Add File</button>
+          </div>
+          <div class="flex-1 overflow-y-auto space-y-2.5 pr-1">
+            <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-xs">
+              <div class="font-semibold text-slate-800 flex items-center gap-1.5">
+                <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-600"></i>
+                <span class="truncate">Convolutional_Neural_Networks.pdf</span>
+              </div>
+              <span class="text-[11px] text-slate-500 mt-1 block">5 pages • CNNs, LeNet, ResNet</span>
+            </div>
+
+            <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-xs">
+              <div class="font-semibold text-slate-800 flex items-center gap-1.5">
+                <i data-lucide="file" class="w-3.5 h-3.5 text-blue-600"></i>
+                <span class="truncate">Recurrent_Neural_Networks_and_LSTMs.docx</span>
+              </div>
+              <span class="text-[11px] text-slate-500 mt-1 block">4 sections • RNNs, BPTT, LSTM Gates</span>
+            </div>
+
+            <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-xs">
+              <div class="font-semibold text-slate-800 flex items-center gap-1.5">
+                <i data-lucide="presentation" class="w-3.5 h-3.5 text-amber-600"></i>
+                <span class="truncate">Transformers_and_Attention_Mechanisms.pptx</span>
+              </div>
+              <span class="text-[11px] text-slate-500 mt-1 block">4 slides • Scaled Dot Attention</span>
+            </div>
+
+            <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-xs">
+              <div class="font-semibold text-slate-800 flex items-center gap-1.5">
+                <i data-lucide="file-code" class="w-3.5 h-3.5 text-slate-600"></i>
+                <span class="truncate">Deep_Learning_Fundamentals.txt</span>
+              </div>
+              <span class="text-[11px] text-slate-500 mt-1 block">7 sections • Backprop, Overfitting</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Chat Messages Stream -->
+        <div class="lg:col-span-8 human-card p-5 h-[calc(100vh-230px)] flex flex-col">
+          <!-- Messages Box -->
+          <div id="tutor-messages-container" class="flex-1 overflow-y-auto space-y-4 pr-1">
+            <!-- Initial Message -->
+            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 text-sm">
+              <h4 class="font-bold text-slate-900 mb-1">Ask questions about your study material</h4>
+              <p class="text-xs text-slate-600">CogniTutor answers based strictly on your uploaded files. Click any sample prompt below or type your own question:</p>
+              
+              <div class="mt-3 flex flex-wrap gap-2">
+                <button onclick="selectTutorPrompt('Explain backpropagation in simple words.')" class="text-xs px-2.5 py-1.5 rounded-lg bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 transition shadow-xs">
+                  "Explain backpropagation in simple words"
+                </button>
+                <button onclick="selectTutorPrompt('What are the advantages of CNN mentioned in Chapter 4?')" class="text-xs px-2.5 py-1.5 rounded-lg bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 transition shadow-xs">
+                  "Advantages of CNN in Chapter 4"
+                </button>
+                <button onclick="selectTutorPrompt('Why do vanilla RNNs suffer from vanishing gradients?')" class="text-xs px-2.5 py-1.5 rounded-lg bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 transition shadow-xs">
+                  "Why do RNNs suffer from vanishing gradients?"
+                </button>
+                <button onclick="selectTutorPrompt('Explain the Scaled Dot-Product Attention formula.')" class="text-xs px-2.5 py-1.5 rounded-lg bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 transition shadow-xs">
+                  "Scaled Dot-Product Attention formula"
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Query Bar -->
+          <div class="pt-3 border-t border-slate-100 mt-2">
+            <div class="flex items-center gap-2 p-1.5 rounded-xl border border-slate-300 focus-within:border-blue-600 bg-white shadow-sm">
+              <!-- Voice mic -->
+              <button id="tutor-voice-btn" title="Speak question" class="voice-mic-btn w-9 h-9 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition shrink-0">
+                <i data-lucide="mic" class="w-4 h-4"></i>
+              </button>
+              <input type="text" id="tutor-chat-input" onkeydown="if(event.key==='Enter'){event.preventDefault(); sendTutorQuery();}" placeholder="Ask a question about your uploaded materials or click mic to speak..." class="flex-1 text-sm bg-transparent border-none text-slate-900 placeholder-slate-400 focus:outline-none px-2">
+              <button onclick="sendTutorQuery()" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition shadow-sm">
+                Ask Notes
+              </button>
+            </div>
+            <div class="mt-1.5 flex items-center justify-between text-[11px] text-slate-400 px-1">
+              <span>Answers reference exact page numbers and slides</span>
+              <span id="voice-status-badge" class="text-rose-600 font-semibold hidden animate-pulse">● Listening...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= TAB 3: EXPLAIN SIMPLY (3 LEVELS) ================= -->
+    <section id="view-doubt" class="tab-view hidden space-y-6">
+      <div>
+        <h2 class="text-xl font-bold text-slate-900">Explain Difficult Topics</h2>
+        <p class="text-xs text-slate-500 mt-0.5">Toggle between 3 cognitive levels: a plain-English analogy, technical mechanics, or production code with equations.</p>
+      </div>
+
+      <!-- Quick Topic Chips -->
+      <div class="flex flex-wrap gap-2">
+        <button onclick="triggerDoubtSolver('lstm')" class="px-3.5 py-1.5 rounded-lg bg-white border border-slate-300 hover:border-blue-600 text-xs font-semibold text-slate-700 shadow-sm transition">
+          LSTM Memory Cells
+        </button>
+        <button onclick="triggerDoubtSolver('backpropagation')" class="px-3.5 py-1.5 rounded-lg bg-white border border-slate-300 hover:border-blue-600 text-xs font-semibold text-slate-700 shadow-sm transition">
+          Backpropagation Chain Rule
+        </button>
+        <button onclick="triggerDoubtSolver('cnn')" class="px-3.5 py-1.5 rounded-lg bg-white border border-slate-300 hover:border-blue-600 text-xs font-semibold text-slate-700 shadow-sm transition">
+          CNN Convolutions
+        </button>
+        <button onclick="triggerDoubtSolver('transformers')" class="px-3.5 py-1.5 rounded-lg bg-white border border-slate-300 hover:border-blue-600 text-xs font-semibold text-slate-700 shadow-sm transition">
+          Transformer Self-Attention
+        </button>
+        <button onclick="triggerDoubtSolver('overfitting')" class="px-3.5 py-1.5 rounded-lg bg-white border border-slate-300 hover:border-blue-600 text-xs font-semibold text-slate-700 shadow-sm transition">
+          Overfitting & Regularization
+        </button>
+      </div>
+
+      <!-- Search Input -->
+      <div class="flex gap-2">
+        <input type="text" id="doubt-query-input" placeholder="Type a concept you find confusing (e.g. 'I do not understand LSTM' or 'Backpropagation')..." class="flex-1 p-3 rounded-xl border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:border-blue-600 shadow-sm">
+        <button onclick="triggerDoubtSolver(document.getElementById('doubt-query-input').value)" class="px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-sm transition">
+          Explain Concept
+        </button>
+      </div>
+
+      <!-- The 3-Tier Explanation Card -->
+      <div id="doubt-explanation-card" class="human-card p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100 mb-5">
+          <div>
+            <span class="text-[11px] font-semibold text-blue-600 uppercase tracking-wider">Concept Breakdown</span>
+            <h3 id="doubt-topic-title" class="text-lg font-bold text-slate-900 mt-0.5">Select a topic above</h3>
+          </div>
+
+          <!-- 3-Level Switcher -->
+          <div class="flex p-1 rounded-lg bg-slate-100 border border-slate-200 shrink-0">
+            <button data-doubt-level="beginner" class="px-3 py-1.5 rounded-md text-xs font-semibold bg-white text-blue-700 shadow-sm transition">
+              1. Simple Analogy
+            </button>
+            <button data-doubt-level="intermediate" class="px-3 py-1.5 rounded-md text-xs font-semibold text-slate-600 hover:text-slate-900 transition">
+              2. Technical & Math
+            </button>
+            <button data-doubt-level="advanced" class="px-3 py-1.5 rounded-md text-xs font-semibold text-slate-600 hover:text-slate-900 transition">
+              3. Code & Architecture
+            </button>
+          </div>
+        </div>
+
+        <div id="doubt-explanation-content">
+          <p class="text-sm text-slate-500 text-center py-10">Click any topic pill above (e.g. "LSTM Memory Cells") to see the explanation at different levels.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= TAB 4: PRACTICE QUIZ ================= -->
+    <section id="view-quiz" class="tab-view hidden space-y-6">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-xl font-bold text-slate-900">Practice Quiz & Assessment</h2>
+          <p class="text-xs text-slate-500 mt-0.5">Includes 10 Multiple Choice Questions, 5 Short Answer Questions, and 3 Long Questions. Difficulty adapts based on your answers.</p>
+        </div>
+
+        <!-- Quiz Selectors -->
+        <div class="flex items-center gap-2">
+          <select id="quiz-topic-select" class="px-3 py-2 rounded-lg bg-white border border-slate-300 text-xs text-slate-700 shadow-sm focus:outline-none">
+            <option value="all">All Course Topics</option>
+            <option value="Neural Networks">Neural Networks</option>
+            <option value="Convolutional Neural Networks (CNN)">CNNs</option>
+            <option value="Recurrent Neural Networks (RNN)">RNNs & Sequential</option>
+            <option value="Long Short-Term Memory (LSTM)">LSTMs</option>
+            <option value="Attention & Transformers">Transformers</option>
+            <option value="Overfitting & Regularization">Overfitting</option>
+          </select>
+
+          <select id="quiz-difficulty-select" class="px-3 py-2 rounded-lg bg-white border border-slate-300 text-xs text-slate-700 shadow-sm focus:outline-none">
+            <option value="adaptive">🧠 Adaptive Difficulty</option>
+            <option value="easy">Easy Only</option>
+            <option value="medium">Medium Only</option>
+            <option value="hard">Hard Only</option>
+          </select>
+
+          <button id="start-quiz-btn" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm transition">
+            Generate Quiz
+          </button>
+        </div>
+      </div>
+
+      <!-- Quiz Status Bar -->
+      <div class="human-card p-4 flex items-center justify-between bg-white">
+        <div class="flex items-center gap-4">
+          <span id="quiz-progress-text" class="text-xs font-semibold text-slate-700">Question 1 of 12</span>
+          <div class="w-32 bg-slate-100 h-2 rounded-full overflow-hidden border border-slate-200">
+            <div id="quiz-progress-bar" class="bg-blue-600 h-full rounded-full transition-all duration-300" style="width: 8%;"></div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 text-xs">
+          <span class="text-slate-500">Current Level:</span>
+          <span id="quiz-difficulty-badge" class="px-2 py-0.5 rounded font-semibold text-[11px] bg-amber-100 text-amber-800 border border-amber-200">MEDIUM</span>
+        </div>
+      </div>
+
+      <!-- Active Question Card -->
+      <div id="quiz-question-container" class="human-card p-6 sm:p-8">
+        <p class="text-sm text-slate-500 text-center py-10">Loading questions...</p>
+      </div>
+    </section>
+
+    <!-- ================= TAB 5: STUDY PLAN (ROADMAP) ================= -->
+    <section id="view-roadmap" class="tab-view hidden space-y-6">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-xl font-bold text-slate-900">Personalized Study Plan</h2>
+          <p class="text-xs text-slate-500 mt-0.5">Your study roadmap automatically prioritizes weak topics (like RNNs) before unlocking advanced material.</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="text-xs text-slate-500">Plan Progress:</span>
+          <span id="roadmap-overall-percent" class="text-sm font-bold text-blue-600 font-mono">22%</span>
+          <div class="w-24 bg-slate-100 h-2 rounded-full overflow-hidden border border-slate-200">
+            <div id="roadmap-progress-bar" class="bg-blue-600 h-full rounded-full" style="width: 22%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Weeks Cards -->
+      <div id="roadmap-weeks-container" class="space-y-4">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- ================= TAB 6: MY MATERIALS ================= -->
+    <section id="view-documents" class="tab-view hidden space-y-6">
+      <div>
+        <h2 class="text-xl font-bold text-slate-900">My Study Materials</h2>
+        <p class="text-xs text-slate-500 mt-0.5">Upload PDFs, slide decks (PPTX), Word documents (DOCX), or plain text. The tutor processes page numbers and chunks for search.</p>
+      </div>
+
+      <!-- Clean Drag & Drop Area -->
+      <div id="file-drop-zone" class="human-card border-2 border-dashed border-slate-300 hover:border-blue-500 p-8 text-center cursor-pointer transition bg-slate-50/50">
+        <input type="file" id="file-input" class="hidden" accept=".pdf,.pptx,.ppt,.docx,.doc,.txt,.md">
+        <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mx-auto mb-3">
+          <i data-lucide="upload" class="w-6 h-6"></i>
+        </div>
+        <h4 class="text-sm font-bold text-slate-900">Upload new study files</h4>
+        <p class="text-xs text-slate-500 mt-1">Drag and drop PDF, PPTX, DOCX, or TXT files here, or click to browse</p>
+        <button class="mt-3 px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-sm transition">
+          Browse Files
+        </button>
+        <div id="upload-status-text" class="mt-3 text-xs font-semibold text-blue-700 hidden"></div>
+      </div>
+
+      <!-- Files List -->
+      <div>
+        <h3 class="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
+          <i data-lucide="file-check" class="w-4 h-4 text-emerald-600"></i>
+          <span>Ready & Indexed in Library</span>
+        </h3>
+        <div id="documents-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= TAB 7: LEADERBOARD ================= -->
+    <section id="view-achievements" class="tab-view hidden space-y-6">
+      <div>
+        <h2 class="text-xl font-bold text-slate-900">Badges & Cohort Leaderboard</h2>
+        <p class="text-xs text-slate-500 mt-0.5">Earn XP by completing quizzes, asking questions, and improving weak topics.</p>
+      </div>
+
+      <!-- Badges -->
+      <div>
+        <h3 class="text-sm font-bold text-slate-900 mb-3">Earned Achievements</h3>
+        <div id="badges-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+
+      <!-- Leaderboard -->
+      <div>
+        <h3 class="text-sm font-bold text-slate-900 mb-3">Study Group Leaderboard</h3>
+        <div id="leaderboard-list" class="space-y-2 max-w-xl">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= TAB: CONCEPT KNOWLEDGE GRAPH ================= -->
+    <section id="view-graph" class="tab-view hidden space-y-6">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+            <span>Concept Knowledge Graph (Visual Ontology)</span>
+            <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">Interactive</span>
+          </h2>
+          <p class="text-xs text-slate-500 mt-0.5">Explore how Deep Learning concepts evolve, connect, and depend on each other. Color-coded with your live competency mastery.</p>
+        </div>
+
+        <!-- Legend -->
+        <div class="flex flex-wrap items-center gap-2 text-xs bg-white px-3 py-1.5 rounded-lg border border-slate-200">
+          <span class="text-slate-500 font-medium">Mastery:</span>
+          <span class="inline-flex items-center gap-1 text-emerald-700 font-semibold">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Strong (≥75%)
+          </span>
+          <span class="inline-flex items-center gap-1 text-amber-700 font-semibold">
+            <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Average (50-74%)
+          </span>
+          <span class="inline-flex items-center gap-1 text-rose-700 font-semibold">
+            <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Weak (&lt;50%)
+          </span>
+        </div>
+      </div>
+
+      <!-- Graph Viewport Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- SVG Canvas Area -->
+        <div class="lg:col-span-8 flex flex-col gap-3">
+          <div class="flex items-center justify-between px-1">
+            <div class="text-xs font-semibold text-slate-600 flex items-center gap-2">
+              <i data-lucide="info" class="w-3.5 h-3.5 text-slate-400"></i>
+              <span>Click any concept node to inspect prerequisites and evolution</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="filterWeakGraphNodes(false)" id="graph-filter-all-btn" class="px-2.5 py-1 text-xs font-medium rounded-md bg-blue-50 text-blue-700 border border-blue-200 transition">Show All</button>
+              <button onclick="filterWeakGraphNodes(true)" id="graph-filter-weak-btn" class="px-2.5 py-1 text-xs font-medium rounded-md bg-white hover:bg-rose-50 text-slate-700 border border-slate-200 transition">Highlight Weak Gaps</button>
+              <button onclick="resetGraphView()" class="px-2.5 py-1 text-xs font-medium rounded-md bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 transition" title="Center view">
+                <i data-lucide="refresh-cw" class="w-3 h-3"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="graph-canvas-container relative w-full h-[600px] overflow-auto bg-slate-50/50 border border-slate-200 rounded-xl">
+            <svg id="concept-graph-svg" class="w-[1240px] h-[580px] select-none">
+              <defs>
+                <marker id="arrow-emerald" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+                  <path d="M 0 1 L 7 4 L 0 7 z" fill="#10b981" />
+                </marker>
+                <marker id="arrow-slate" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+                  <path d="M 0 1 L 7 4 L 0 7 z" fill="#94a3b8" />
+                </marker>
+                <marker id="arrow-rose" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+                  <path d="M 0 1 L 7 4 L 0 7 z" fill="#f43f5e" />
+                </marker>
+              </defs>
+              <g id="graph-edges-layer"></g>
+              <g id="graph-nodes-layer"></g>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Node Inspector Drawer / Card -->
+        <div class="lg:col-span-4 flex flex-col gap-4">
+          <div id="graph-inspector-card" class="human-card p-6 flex flex-col justify-between h-[600px]">
+            <div id="graph-inspector-empty" class="h-full flex flex-col items-center justify-center text-center p-6 text-slate-400">
+              <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3 text-slate-400">
+                <i data-lucide="mouse-pointer-click" class="w-6 h-6"></i>
+              </div>
+              <h4 class="font-bold text-slate-700 text-sm">Select a Concept Node</h4>
+              <p class="text-xs text-slate-500 mt-1 max-w-xs">Click on any node in the knowledge graph to view its syllabus role, prerequisites, and mastery diagnostics.</p>
+            </div>
+
+            <div id="graph-inspector-content" class="hidden flex-col h-full justify-between">
+              <div class="space-y-4">
+                <div class="flex items-start justify-between">
+                  <div>
+                    <span id="inspect-category" class="text-[11px] font-bold text-blue-600 uppercase tracking-wide">Category</span>
+                    <h3 id="inspect-title" class="text-lg font-bold text-slate-900 mt-0.5">Perceptron</h3>
+                  </div>
+                  <span id="inspect-status-pill" class="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    85% Mastery
+                  </span>
+                </div>
+
+                <p id="inspect-description" class="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-100">
+                  Concept description here.
+                </p>
+
+                <!-- Mastery Meter -->
+                <div>
+                  <div class="flex justify-between text-xs mb-1">
+                    <span class="text-slate-500">Live Mastery Score:</span>
+                    <span id="inspect-score-val" class="font-mono font-bold text-slate-800">85%</span>
+                  </div>
+                  <div class="w-full h-2 rounded-full bg-slate-100 overflow-hidden border border-slate-200">
+                    <div id="inspect-score-bar" class="h-full bg-emerald-500 rounded-full" style="width: 85%;"></div>
+                  </div>
+                </div>
+
+                <!-- Relationships list -->
+                <div>
+                  <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Connected Knowledge Links</h4>
+                  <div id="inspect-relations-list" class="space-y-1.5 text-xs max-h-44 overflow-y-auto pr-1">
+                    <!-- Dynamic -->
+                  </div>
+                </div>
+              </div>
+
+              <!-- Quick Action Buttons -->
+              <div class="pt-4 border-t border-slate-100 space-y-2">
+                <button id="inspect-ask-notes-btn" class="w-full py-2 px-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition flex items-center justify-center gap-1.5">
+                  <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
+                  <span>Ask Notes About This</span>
+                </button>
+                <button id="inspect-explain-btn" class="w-full py-2 px-3 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-semibold text-xs transition flex items-center justify-center gap-1.5">
+                  <i data-lucide="help-circle" class="w-3.5 h-3.5"></i>
+                  <span>Explain Simply (3 Levels)</span>
+                </button>
+                <button id="inspect-viva-btn" class="w-full py-2 px-3 rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 font-semibold text-xs transition flex items-center justify-center gap-1.5">
+                  <i data-lucide="mic" class="w-3.5 h-3.5"></i>
+                  <span>Test in Oral Viva Exam</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= TAB: SOCRATIC VIVA INTERVIEW ================= -->
+    <section id="view-viva" class="tab-view hidden space-y-6">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+            <span>Socratic Oral Viva Examination</span>
+            <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200">Voice & Speech Enabled</span>
+          </h2>
+          <p class="text-xs text-slate-500 mt-0.5">An AI Academic Examiner (Prof. Turing) conducts an oral technical defense, challenges your explanations, and evaluates your conceptual depth.</p>
+        </div>
+
+        <!-- Topic Selector & Start Controls -->
+        <div class="flex items-center gap-2.5">
+          <select id="viva-topic-select" class="px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-semibold text-slate-700 bg-white focus:outline-none focus:border-blue-600">
+            <option value="Sequential Modeling & RNNs">Sequential Modeling & RNNs (Weak Spot)</option>
+            <option value="Convolutional Neural Networks (CNN)">Convolutional Neural Networks (CNN)</option>
+            <option value="Attention & Transformers">Attention & Transformers</option>
+            <option value="Backpropagation & Optimization">Backpropagation & Optimization</option>
+          </select>
+          <button onclick="startNewVivaSession()" class="px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs shadow-sm transition flex items-center gap-1.5">
+            <i data-lucide="play" class="w-3.5 h-3.5"></i>
+            <span>Begin Oral Exam</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Viva Room -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Main Interview Chamber -->
+        <div class="lg:col-span-8 space-y-5">
+          <!-- Examiner Question Card -->
+          <div class="human-card p-6 border-l-4 border-l-slate-800 bg-gradient-to-r from-slate-50/70 via-white to-white">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+              <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-full bg-slate-900 text-white flex items-center justify-center font-serif text-sm font-bold shadow-xs">
+                  PT
+                </div>
+                <div>
+                  <h4 class="text-sm font-bold text-slate-900">Prof. Turing</h4>
+                  <p class="text-[11px] text-slate-500">Academic Examiner • Deep Learning Viva Board</p>
+                </div>
+              </div>
+
+              <!-- Round Badge & Audio Playback -->
+              <div class="flex items-center gap-2">
+                <span id="viva-round-badge" class="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 text-xs font-mono font-bold border border-blue-200">
+                  Round 1 of 3
+                </span>
+                <button id="viva-replay-btn" onclick="replayExaminerSpeech()" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition" title="Replay voice">
+                  <i data-lucide="volume-2" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Examiner Question Text -->
+            <div class="relative pl-6 py-2">
+              <span class="absolute left-0 top-0 text-3xl font-serif text-slate-300 select-none">“</span>
+              <p id="viva-question-text" class="text-base text-slate-800 font-medium leading-relaxed">
+                Click "Begin Oral Exam" above to commence your oral viva examination. Prof. Turing will challenge your understanding of foundational Deep Learning mechanisms.
+              </p>
+            </div>
+          </div>
+
+          <!-- Student Oral Defense Area -->
+          <div class="human-card p-6 space-y-4">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <i data-lucide="mic" class="w-4 h-4 text-slate-600"></i>
+                <h4 class="text-sm font-bold text-slate-900">Your Oral Defense</h4>
+              </div>
+              <div class="flex items-center gap-2">
+                <span id="mic-status-label" class="text-xs text-slate-400 font-medium">Mic Idle</span>
+                <button id="viva-mic-btn" onclick="toggleVivaSpeechRecognition()" class="px-3.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition">
+                  <i data-lucide="mic" class="w-3.5 h-3.5 text-rose-600"></i>
+                  <span id="viva-mic-text">Click to Speak</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Transcript Textarea -->
+            <textarea id="viva-transcript-input" rows="4" placeholder="Speak into your microphone or type your technical answer here in detail..." class="viva-transcript-box w-full p-3.5 text-sm text-slate-800 focus:outline-none"></textarea>
+
+            <div class="flex items-center justify-between pt-1">
+              <span class="text-xs text-slate-400">Be rigorous: State mathematical formulas, intuitions, and architectural causes.</span>
+              <button id="viva-submit-btn" onclick="submitVivaDefense()" class="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-sm transition flex items-center gap-1.5">
+                <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                <span>Submit Defense</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Round-by-Round Viva History -->
+          <div id="viva-history-container" class="space-y-3">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <!-- Viva Scorecard & Diagnostic Sidebar -->
+        <div class="lg:col-span-4 space-y-4">
+          <div class="human-card p-5">
+            <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">Viva Scoring Rubric</h4>
+            <div class="space-y-3 text-xs">
+              <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                <span class="text-slate-600">Conceptual Depth</span>
+                <span class="font-semibold text-slate-800">40% weight</span>
+              </div>
+              <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                <span class="text-slate-600">Terminology & Formulas</span>
+                <span class="font-semibold text-slate-800">30% weight</span>
+              </div>
+              <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                <span class="text-slate-600">Counter-example Rigor</span>
+                <span class="font-semibold text-slate-800">30% weight</span>
+              </div>
+            </div>
+            <div class="mt-4 p-3 rounded-lg bg-amber-50/70 border border-amber-200 text-[11px] text-amber-800 leading-relaxed">
+              💡 <strong>Examiner's Advice:</strong> Don't just say what an algorithm does; explain <em>why</em> it was invented to solve the limitations of prior techniques.
+            </div>
+          </div>
+
+          <!-- Final Scorecard Summary Card (visible upon exam conclusion) -->
+          <div id="viva-final-card" class="human-card p-6 border-l-4 border-l-emerald-500 hidden space-y-4">
+            <div class="flex items-center justify-between">
+              <h4 class="font-bold text-slate-900 text-sm">Oral Viva Results</h4>
+              <span id="viva-final-verdict" class="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">Distinction</span>
+            </div>
+            
+            <div class="flex items-baseline gap-2">
+              <span id="viva-final-score" class="text-3xl font-extrabold text-slate-900">85%</span>
+              <span class="text-xs text-slate-500 font-medium">Final Defense Score</span>
+            </div>
+
+            <p id="viva-final-feedback" class="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-200">
+              Exam completed successfully.
+            </p>
+
+            <div class="flex items-center justify-between text-xs text-slate-600 pt-2 border-t border-slate-100">
+              <span class="flex items-center gap-1 font-semibold text-blue-600">
+                <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+                <span id="viva-xp-gain">+135 XP</span>
+              </span>
+              <span class="text-emerald-700 font-medium">Competency updated</span>
+            </div>
+
+            <button onclick="startNewVivaSession()" class="w-full py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs transition">
+              Retake / New Defense
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- CHUNKS INSPECTOR MODAL -->
+  <div id="chunks-modal" class="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white border border-slate-200 rounded-2xl w-full max-w-2xl max-h-[80vh] flex flex-col shadow-xl">
+      <div class="p-4 border-b border-slate-200 flex items-center justify-between">
+        <h3 id="chunks-modal-title" class="font-bold text-sm text-slate-900">Document Excerpt</h3>
+        <button onclick="closeChunksModal()" class="w-7 h-7 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <div id="chunks-modal-content" class="flex-1 overflow-y-auto p-4 space-y-2.5">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS DRAWER -->
+  <div id="settings-drawer" class="fixed inset-0 bg-black/40 z-50 flex justify-end hidden">
+    <div class="w-full max-w-sm bg-white h-full p-6 flex flex-col justify-between shadow-2xl overflow-y-auto">
+      <div>
+        <div class="flex items-center justify-between pb-4 border-b border-slate-200 mb-5">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-lg overflow-hidden border border-slate-900/10 shadow-2xs">
+              <img src="/static/assets/logo.png" alt="CogniTutor" class="w-full h-full object-cover">
+            </div>
+            <div>
+              <h3 class="font-bold text-sm text-slate-900 leading-tight">CogniTutor Settings</h3>
+              <p class="text-[11px] text-slate-500">Platform & AI Preferences</p>
+            </div>
+          </div>
+          <button onclick="toggleSettingsDrawer()" class="w-7 h-7 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+        <div class="space-y-4">
+          <!-- AI Provider -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">AI Engine</label>
+            <select id="settings-llm-provider" class="w-full p-2.5 rounded-lg bg-white border border-slate-300 text-xs text-slate-800 focus:outline-none focus:border-blue-600">
+              <option value="local">Local RAG Engine (Zero API Key Needed)</option>
+              <option value="openai">OpenAI (GPT-4o / GPT-4o-mini)</option>
+              <option value="gemini">Google Gemini 2.0</option>
+              <option value="ollama">Local Ollama LLM</option>
+            </select>
+          </div>
+
+          <!-- OpenAI Key -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">OpenAI API Key (Optional)</label>
+            <input type="password" id="settings-openai-key" placeholder="sk-..." class="w-full p-2.5 rounded-lg border border-slate-300 text-xs text-slate-800 focus:outline-none focus:border-blue-600">
+          </div>
+
+          <!-- Gemini Key -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Google Gemini API Key (Optional)</label>
+            <input type="password" id="settings-gemini-key" placeholder="AIzaSy..." class="w-full p-2.5 rounded-lg border border-slate-300 text-xs text-slate-800 focus:outline-none focus:border-blue-600">
+          </div>
+
+          <!-- Audio Chimes -->
+          <div class="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-200">
+            <div>
+              <span class="text-xs font-semibold text-slate-800">Quiz Sound Chimes</span>
+              <p class="text-[11px] text-slate-500">Play subtle chime on correct answer</p>
+            </div>
+            <input type="checkbox" id="settings-sound-toggle" checked class="w-4 h-4 text-blue-600 rounded border-slate-300">
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-4 border-t border-slate-200">
+        <button onclick="savePlatformSettings()" class="w-full py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-sm transition">
+          Save Preferences
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPTS -->
+  <script src="/static/js/api.js"></script>
+  <script src="/static/js/voice.js"></script>
+  <script src="/static/js/charts.js"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+# Deep Learning & Neural Networks Fundamentals
+
+## Chapter 1: Introduction to Artificial Neural Networks
+Artificial Neural Networks (ANNs) are computational models inspired by the biological neural networks of the human brain. An ANN consists of interconnected nodes called artificial neurons or perceptrons organized into layers: the input layer, one or more hidden layers, and the output layer.
+
+Each neuron computes a weighted sum of its inputs, adds a bias term, and passes the result through a non-linear activation function:
+z = sum(w_i * x_i) + b
+a = sigma(z)
+
+Common activation functions include:
+1. Sigmoid: Maps values between 0 and 1. Useful for binary classification, but suffers from vanishing gradients.
+2. ReLU (Rectified Linear Unit): f(x) = max(0, x). Solves vanishing gradient for positive values and accelerates gradient descent convergence.
+3. Leaky ReLU: f(x) = max(0.01x, x). Prevents dying ReLU problem by providing a small non-zero slope for negative inputs.
+4. Softmax: Converts raw logits into normalized probability distribution over multiple classes.
+
+## Chapter 2: Forward Propagation and Loss Functions
+Forward propagation is the process where input data traverses forward through the layers to compute the network's prediction. Once the prediction is made, a loss function measures how far the prediction is from the actual ground truth.
+- Mean Squared Error (MSE): Typically used for continuous regression tasks.
+- Binary Cross-Entropy: Used for binary classification tasks.
+- Categorical Cross-Entropy: Used for multi-class classification tasks.
+
+## Chapter 3: Backpropagation and Gradient Descent
+Backpropagation (backward propagation of errors) is the fundamental algorithm used to train neural networks. It applies the chain rule of calculus to compute the partial derivative of the loss function with respect to every weight and bias in the network:
+dL/dw_ij = (dL/da_j) * (da_j/dz_j) * (dz_j/dw_ij)
+
+Once gradients are computed, an optimization algorithm updates the parameters:
+w_new = w_old - learning_rate * dL/dw
+
+Key optimizers include:
+- Stochastic Gradient Descent (SGD) with Momentum
+- RMSProp: Scales the learning rate based on running average of squared gradients
+- Adam (Adaptive Moment Estimation): Combines momentum and RMSProp for robust convergence.
+
+## Chapter 4: Overfitting, Underfitting, and Regularization
+Overfitting occurs when a neural network learns noise, idiosyncrasies, and specific patterns in the training data so closely that it performs exceptionally well on training data (low training error) but fails to generalize to unseen validation or test data (high test error).
+Conversely, underfitting happens when the model is too simple to capture underlying patterns, resulting in high error on both training and test data.
+
+Techniques to prevent overfitting:
+1. Dropout: Randomly deactivates a fraction p of neurons during each training step, preventing co-adaptation of features.
+2. L1 (Lasso) and L2 (Ridge / Weight Decay) Regularization: Adds a penalty term proportional to weights to the loss function.
+3. Early Stopping: Halts training when validation loss stops improving.
+4. Data Augmentation: Synthetically expands the dataset by rotating, cropping, or flipping inputs.

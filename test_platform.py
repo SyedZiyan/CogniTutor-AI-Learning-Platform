@@ -1,0 +1,111 @@
+import sys
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+from fastapi.testclient import TestClient
+from backend.main import app
+
+client = TestClient(app)
+
+def run_tests():
+    print("[TEST] Running CogniTutor AI Learning Platform Verification Tests...\n")
+
+    # 1. Status
+    res = client.get("/api/status")
+    assert res.status_code == 200, f"Status failed: {res.text}"
+    status_data = res.json()
+    print(f"✅ Status Endpoint: OK (Docs indexed: {status_data['total_documents']}, Chunks: {status_data['total_chunks']})")
+
+    # 2. Documents
+    res = client.get("/api/documents")
+    assert res.status_code == 200, f"Documents failed: {res.text}"
+    docs_data = res.json()
+    print(f"✅ Documents Endpoint: OK ({len(docs_data['documents'])} sample materials ready)")
+
+    # 3. Tutor Chat (RAG)
+    res = client.post("/api/tutor/chat", json={"query": "Explain backpropagation in simple words."})
+    assert res.status_code == 200, f"Tutor chat failed: {res.text}"
+    tutor_data = res.json()
+    assert len(tutor_data["citations"]) > 0, "Expected citations"
+    print(f"✅ AI Tutor RAG Chat: OK (Grounded with {len(tutor_data['citations'])} citations)")
+
+    # 4. Doubt Solver (3 Levels)
+    res = client.post("/api/tutor/doubt-solver", json={"topic_or_question": "lstm"})
+    assert res.status_code == 200, f"Doubt solver failed: {res.text}"
+    doubt_data = res.json()
+    assert "beginner" in doubt_data and "intermediate" in doubt_data and "advanced" in doubt_data
+    print("✅ 3-Level Doubt Solver: OK (Beginner, Intermediate, Advanced models verified)")
+
+    # 5. Quiz Generator
+    res = client.get("/api/quiz/generate?topic=all&difficulty=adaptive")
+    assert res.status_code == 200, f"Quiz generation failed: {res.text}"
+    quiz_data = res.json()
+    print(f"✅ Quiz Generator: OK ({len(quiz_data['mcqs'])} MCQs, {len(quiz_data['short_questions'])} Short Questions, {len(quiz_data['long_questions'])} Long Questions)")
+
+    # 6. MCQ Evaluation
+    sample_mcq = quiz_data['mcqs'][0]
+    res = client.post("/api/quiz/evaluate-mcq", json={
+        "question_id": sample_mcq["id"],
+        "selected_option_index": sample_mcq["correct_index"],
+        "current_streak": 1,
+        "current_difficulty": "medium"
+    })
+    assert res.status_code == 200, f"MCQ evaluate failed: {res.text}"
+    mcq_eval = res.json()
+    assert mcq_eval["is_correct"] is True
+    print(f"✅ Adaptive MCQ Auto-Evaluator: OK (XP: +{mcq_eval['xp_earned']}, Next difficulty: {mcq_eval['next_difficulty']})")
+
+    # 7. Competency Engine
+    res = client.get("/api/competency/analysis")
+    assert res.status_code == 200, f"Competency failed: {res.text}"
+    comp_data = res.json()
+    print(f"✅ Competency Engine: OK (Overall mastery: {comp_data['overall_mastery']}%, Strong: {len(comp_data['strong'])}, Weak: {len(comp_data['weak'])})")
+
+    # 8. Dynamic Roadmap
+    res = client.get("/api/roadmap")
+    assert res.status_code == 200, f"Roadmap failed: {res.text}"
+    road_data = res.json()
+    print(f"✅ Personalized Dynamic Roadmap: OK ({len(road_data['weeks'])} structured weeks generated)")
+
+    # 9. Gamification
+    res = client.get("/api/gamification")
+    assert res.status_code == 200, f"Gamification failed: {res.text}"
+    gam_data = res.json()
+    print(f"✅ Gamification & Leaderboard: OK (Level: {gam_data['level_info']['current_level']}, XP: {gam_data['level_info']['current_xp']}, Streak: {gam_data['streak_days']} days)")
+
+    # 10. Frontend static check
+    res = client.get("/")
+    assert res.status_code == 200, "Frontend index.html failed"
+    print("✅ Frontend SPA Delivery: OK (HTTP 200)")
+
+    # 11. Concept Knowledge Graph (Visual Ontology)
+    res = client.get("/api/graph")
+    assert res.status_code == 200, f"Graph failed: {res.text}"
+    graph_data = res.json()
+    assert "nodes" in graph_data and "edges" in graph_data
+    assert len(graph_data["nodes"]) >= 10, "Expected at least 10 concept nodes"
+    assert len(graph_data["edges"]) >= 10, "Expected at least 10 ontology edges"
+    print(f"✅ Concept Knowledge Graph: OK ({len(graph_data['nodes'])} concepts, {len(graph_data['edges'])} ontology edges)")
+
+    # 12. Socratic Viva Interview Mode
+    res = client.post("/api/viva/start", json={"topic": "Sequential Modeling & RNNs", "student_name": "Scholar"})
+    assert res.status_code == 200, f"Viva start failed: {res.text}"
+    viva_start = res.json()
+    assert "session_id" in viva_start and "question" in viva_start
+    session_id = viva_start["session_id"]
+    print(f"✅ Socratic Viva Mode Start: OK (Session: {session_id[:8]}..., Round: {viva_start['round']})")
+
+    # Round 1 response
+    res = client.post("/api/viva/respond", json={
+        "session_id": session_id,
+        "student_transcript": "Vanilla RNNs suffer from the vanishing gradient problem because repeatedly multiplying weight matrices across many timesteps causes eigenvalues smaller than 1 to decay exponentially."
+    })
+    assert res.status_code == 200, f"Viva response failed: {res.text}"
+    viva_r1 = res.json()
+    assert "feedback" in viva_r1 and "next_question" in viva_r1
+    print(f"✅ Socratic Viva Round 1 Defense: OK (Score: {viva_r1['score_this_round']}/100, Examiner Critique received)")
+
+    print("\n🎉 ALL 12 TEST SUITES PASSED FLAWLESSLY!\n")
+
+if __name__ == "__main__":
+    run_tests()
+

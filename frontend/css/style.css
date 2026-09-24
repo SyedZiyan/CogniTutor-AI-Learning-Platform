@@ -1,0 +1,375 @@
+/* ==========================================================================
+   Human-Crafted Modern Design System
+   Inspired by Notion, Quizlet, Linear, and NotebookLM
+   Clean, authentic, distraction-free, and legible
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Human-friendly Clean Palette */
+  --bg-page: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-subtle: #f1f5f9;
+  
+  --border-light: #e2e8f0;
+  --border-medium: #cbd5e1;
+
+  --text-main: #0f172a;
+  --text-body: #334155;
+  --text-muted: #64748b;
+  --text-faint: #94a3b8;
+
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --primary-subtle: #eff6ff;
+  --primary-border: #bfdbfe;
+
+  --success: #10b981;
+  --success-subtle: #ecfdf5;
+  --success-border: #a7f3d0;
+  --success-text: #065f46;
+
+  --warning: #f59e0b;
+  --warning-subtle: #fffbeb;
+  --warning-border: #fde68a;
+  --warning-text: #92400e;
+
+  --danger: #ef4444;
+  --danger-subtle: #fef2f2;
+  --danger-border: #fecaca;
+  --danger-text: #991b1b;
+}
+
+* {
+  box-sizing: border-box;
+  font-family: var(--font-sans);
+}
+
+body {
+  background-color: var(--bg-page);
+  color: var(--text-main);
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Crisp Clean Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Clean Cards (Paper Feel) */
+.human-card {
+  background: #ffffff;
+  border: 1px solid var(--border-light);
+  border-radius: 14px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.03);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.human-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.03);
+}
+
+/* Subtle Interactive Buttons */
+.nav-tab-btn {
+  color: var(--text-muted);
+  border-radius: 9px;
+  padding: 8px 14px;
+  font-size: 13.5px;
+  font-weight: 500;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.nav-tab-btn:hover {
+  color: var(--text-main);
+  background-color: #f1f5f9;
+}
+
+.nav-tab-btn.active {
+  color: #1e40af;
+  background-color: #eff6ff;
+  font-weight: 600;
+}
+
+/* Quiz Option Buttons (Real Study App Style) */
+.study-opt-btn {
+  background-color: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px 16px;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  color: var(--text-body);
+}
+
+.study-opt-btn:hover:not(:disabled) {
+  border-color: #93c5fd;
+  background-color: #f8fafc;
+}
+
+.study-opt-btn:disabled {
+  cursor: default;
+}
+
+.opt-correct {
+  background-color: var(--success-subtle) !important;
+  border-color: var(--success) !important;
+  color: var(--success-text) !important;
+  font-weight: 600;
+}
+
+.opt-incorrect {
+  background-color: var(--danger-subtle) !important;
+  border-color: var(--danger) !important;
+  color: var(--danger-text) !important;
+}
+
+/* Letter Badges (A, B, C, D) */
+.opt-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background-color: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 12px;
+  shrink: 0;
+}
+
+.opt-badge-correct {
+  background-color: #10b981;
+  border-color: #10b981;
+  color: #ffffff;
+}
+
+.opt-badge-incorrect {
+  background-color: #ef4444;
+  border-color: #ef4444;
+  color: #ffffff;
+}
+
+/* Source Citation Pill (NotebookLM Style) */
+.citation-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background-color: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #3b82f6;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.citation-pill:hover {
+  background-color: #e0f2fe;
+  border-color: #bae6fd;
+}
+
+/* Clean Typography for AI Tutor responses */
+.notes-prose {
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: #1e293b;
+}
+
+.notes-prose p {
+  margin-top: 0;
+  margin-bottom: 0.85rem;
+}
+
+.notes-prose p:last-child {
+  margin-bottom: 0;
+}
+
+.notes-prose h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.notes-prose ul, .notes-prose ol {
+  margin-top: 0.25rem;
+  margin-bottom: 0.85rem;
+  padding-left: 1.35rem;
+}
+
+.notes-prose li {
+  margin-bottom: 0.35rem;
+}
+
+.notes-prose strong {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.notes-prose code:not(pre code) {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  background-color: #f1f5f9;
+  color: #0f172a;
+  padding: 2px 5px;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+}
+
+.notes-prose pre {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  background-color: #0f172a;
+  color: #f8fafc;
+  padding: 14px;
+  border-radius: 10px;
+  overflow-x: auto;
+  margin: 0.75rem 0;
+}
+
+/* Audio wave animation */
+@keyframes human-wave {
+  0%, 100% { height: 4px; }
+  50% { height: 16px; }
+}
+
+.human-wave-bar {
+  width: 3px;
+  background-color: #0284c7;
+  border-radius: 9999px;
+  animation: human-wave 1s infinite ease-in-out;
+}
+.human-wave-bar:nth-child(1) { animation-delay: 0.1s; }
+.human-wave-bar:nth-child(2) { animation-delay: 0.3s; }
+.human-wave-bar:nth-child(3) { animation-delay: 0.15s; }
+.human-wave-bar:nth-child(4) { animation-delay: 0.4s; }
+
+/* Custom Checkbox for Roadmap */
+.roadmap-checkbox {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 5px;
+  background-color: #ffffff;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.15s ease;
+  margin-top: 2px;
+}
+
+.roadmap-checkbox:checked {
+  background-color: #2563eb;
+  border-color: #2563eb;
+}
+
+.roadmap-checkbox:checked::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  width: 5px;
+  height: 9px;
+  border: solid #ffffff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* ==========================================================================
+   Concept Knowledge Graph Visuals
+   ========================================================================== */
+.graph-canvas-container {
+  background-color: #fafbfc;
+  background-image: radial-gradient(#e2e8f0 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid var(--border-light);
+  min-height: 580px;
+}
+
+.graph-node-group {
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), filter 0.2s ease;
+}
+
+.graph-node-group:hover {
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.08));
+}
+
+.graph-node-group.selected rect.node-card {
+  stroke: #2563eb;
+  stroke-width: 2.5px;
+}
+
+.graph-node-group.weak-highlight rect.node-card {
+  stroke: #e11d48;
+  stroke-dasharray: 4 2;
+}
+
+/* ==========================================================================
+   Socratic Viva Interview Visuals
+   ========================================================================== */
+@keyframes mic-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.5); }
+  70% { box-shadow: 0 0 0 14px rgba(225, 29, 72, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0); }
+}
+
+.mic-recording-pulse {
+  animation: mic-pulse 1.6s infinite;
+  background-color: #e11d48 !important;
+  color: #ffffff !important;
+}
+
+.viva-transcript-box {
+  background-color: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  font-family: var(--font-sans);
+  line-height: 1.6;
+}
+
+.viva-transcript-box:focus {
+  background-color: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  outline: none;
+}
+

@@ -1,0 +1,71 @@
+{
+  "9c5d4e4d": {
+    "doc_id": "9c5d4e4d",
+    "file_name": "Convolutional_Neural_Networks.pdf",
+    "file_path": "C:\\Users\\syedz\\.gemini\\antigravity\\scratch\\ai_learning_platform\\sample_materials\\Convolutional_Neural_Networks.pdf",
+    "file_type": "PDF",
+    "file_size_kb": 3.3,
+    "chunk_count": 5,
+    "topics": [
+      "Deep Learning Fundamentals",
+      "Convolutional Neural Networks (CNN)",
+      "Neural Networks"
+    ],
+    "is_sample": true
+  },
+  "417d0f64": {
+    "doc_id": "417d0f64",
+    "file_name": "Deep_Learning_Fundamentals.txt",
+    "file_path": "C:\\Users\\syedz\\.gemini\\antigravity\\scratch\\ai_learning_platform\\sample_materials\\Deep_Learning_Fundamentals.txt",
+    "file_type": "TXT",
+    "file_size_kb": 3.2,
+    "chunk_count": 7,
+    "topics": [
+      "Backpropagation & Optimization",
+      "Forward & Loss Functions",
+      "Overfitting & Regularization",
+      "Neural Networks"
+    ],
+    "is_sample": true
+  },
+  "febf7d08": {
+    "doc_id": "febf7d08",
+    "file_name": "Recurrent_Neural_Networks_and_LSTMs.docx",
+    "file_path": "C:\\Users\\syedz\\.gemini\\antigravity\\scratch\\ai_learning_platform\\sample_materials\\Recurrent_Neural_Networks_and_LSTMs.docx",
+    "file_type": "DOCX",
+    "file_size_kb": 35.5,
+    "chunk_count": 6,
+    "topics": [
+      "Gated Recurrent Units (GRU)",
+      "Vanishing Gradient Problem",
+      "Recurrent Neural Networks (RNN)",
+      "Long Short-Term Memory (LSTM)"
+    ],
+    "is_sample": true
+  },
+  "52a7632a": {
+    "doc_id": "52a7632a",
+    "file_name": "Transformers_and_Attention_Mechanisms.pptx",
+    "file_path": "C:\\Users\\syedz\\.gemini\\antigravity\\scratch\\ai_learning_platform\\sample_materials\\Transformers_and_Attention_Mechanisms.pptx",
+    "file_type": "PPTX",
+    "file_size_kb": 30.9,
+    "chunk_count": 4,
+    "topics": [
+      "Attention & Transformers",
+      "Recurrent Neural Networks (RNN)"
+    ],
+    "is_sample": true
+  },
+  "2ad14e3c": {
+    "doc_id": "2ad14e3c",
+    "file_name": "Smart India Hackathon.pdf",
+    "file_path": "C:\\Users\\syedz\\.gemini\\antigravity\\scratch\\ai_learning_platform\\uploads\\Smart India Hackathon.pdf",
+    "file_type": "PDF",
+    "file_size_kb": 975.2,
+    "chunk_count": 15,
+    "topics": [
+      "Deep Learning Fundamentals"
+    ],
+    "is_sample": false
+  }
+}
