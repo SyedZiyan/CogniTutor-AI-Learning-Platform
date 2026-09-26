@@ -14,6 +14,7 @@
   <img src="https://img.shields.io/badge/FastAPI-0.115+-009688?logo=fastapi" alt="FastAPI" />
   <img src="https://img.shields.io/badge/Architecture-Hybrid%20RAG%20%2B%20BM25-indigo" alt="RAG" />
   <img src="https://img.shields.io/badge/Competency-Bayesian%20Mastery-emerald" alt="Competency Engine" />
+  <img src="https://img.shields.io/badge/Multi--Course-Deep%20Learning%20%7C%20DSA%20%7C%20OS%20%7C%20Math-blue" alt="Multi Course" />
   <img src="https://img.shields.io/badge/UI-Notion%20%26%20Linear%20Design-slate" alt="UI Design" />
   <img src="https://img.shields.io/badge/Tests-12%20Passing-brightgreen" alt="Tests Passing" />
   <img src="https://img.shields.io/badge/License-MIT-amber" alt="License MIT" />
@@ -40,7 +41,7 @@ Built with an authentic **Notion / NotebookLM** human-crafted design system—fr
 ---
 
 ### 2. Interactive Concept Knowledge Graph (Visual Ontology)
-*Explore how Deep Learning concepts evolve, connect, and depend on each other. Nodes are dynamically color-coded with live competency scores (Emerald: Strong $\ge 75\%$, Amber: Average $50-74\%$, Rose: Weak Gap $< 50\%$).*
+*Explore how concepts evolve, connect, and depend on each other. Nodes are dynamically color-coded with live competency scores (Emerald: Strong $\ge 75\%$, Amber: Average $50-74\%$, Rose: Weak Gap $< 50\%$).*
 <p align="center">
   <img src="docs/images/knowledge_graph_preview.png" alt="Concept Knowledge Graph UI" width="95%" />
 </p>
@@ -57,12 +58,17 @@ Built with an authentic **Notion / NotebookLM** human-crafted design system—fr
 
 ## ✨ Key Features
 
-- **📚 Multi-Format Document Processing**: Upload PDFs, PowerPoint presentations (`.pptx`), Word documents (`.docx`), or Plain Text (`.txt`, `.md`). Chunks preserve exact page and slide numbers for citation footnote links.
+- **📚 Multi-Course Academic Support**: Seamlessly switch between and manage multiple subjects:
+  - 🧠 *Deep Learning & Neural Networks* (Backprop, CNNs, LSTMs, Transformers)
+  - 💻 *Data Structures & Algorithms* (Graph Traversals, Dynamic Programming, Trees)
+  - 🖥️ *Operating Systems & Systems Programming* (Context Switching, CPU Scheduling, Deadlocks, Paging)
+  - 📐 *Linear Algebra & Optimization* (Eigenvalues, SVD, Gradient Descent, Convexity)
+- **📄 Multi-Format Document Processing**: Upload PDFs, PowerPoint presentations (`.pptx`), Word documents (`.docx`), or Plain Text (`.txt`, `.md`). Chunks preserve exact page and slide numbers for citation footnote links.
 - **🔍 Grounded Hybrid RAG AI Tutor**: TF-IDF vector space model paired with BM25 keyword matching guarantees responses are grounded strictly in your study material with academic citation pills.
 - **💡 3-Level Progressive Doubt Solver**: Explains complex topics across three levels of abstraction:
   - *Beginner*: Intuitive real-world analogies.
   - *Intermediate*: Technical mathematics & theoretical intuitions.
-  - *Advanced*: Production-ready PyTorch / Python code implementations.
+  - *Advanced*: Production-ready Python / PyTorch code implementations.
 - **🎯 Computerized Adaptive Testing (CAT)**: Quizzes dynamically scale difficulty (`Easy ↔ Medium ↔ Hard`) based on live student performance and streaks.
 - **📊 Bayesian Competency & Skill Gap Engine**: Automatically categorizes curriculum mastery into *Strong*, *Average*, and *Weak Gaps*.
 - **🗺️ Dynamic Personalized Roadmap**: Automatically schedules study milestones and injects prerequisite remediation before unlocking advanced lessons.
@@ -185,6 +191,7 @@ The backend provides **18 modular REST API endpoints**:
 CogniTutor-AI-Learning-Platform/
 ├── backend/
 │   ├── config.py              # Configuration & environment settings
+│   ├── course_manager.py      # Multi-course switcher & catalog manager
 │   ├── document_processor.py  # Multi-format document parser (PDF, PPTX, DOCX, TXT)
 │   ├── storage.py             # Document store & chunk indexing
 │   ├── rag_engine.py          # TF-IDF + BM25 hybrid retrieval engine
@@ -209,6 +216,10 @@ CogniTutor-AI-Learning-Platform/
 │   └── index.html             # Single Page Application
 ├── docs/
 │   └── images/                # Visual previews, screenshots, & brand marks
+│       ├── logo.png
+│       ├── dashboard_preview.png
+│       ├── knowledge_graph_preview.png
+│       └── viva_interview_preview.png
 ├── sample_materials/          # Preloaded course documents (.pdf, .pptx, .docx, .txt)
 ├── requirements.txt           # Python dependencies
 ├── run.py                     # Application launcher
