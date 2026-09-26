@@ -311,29 +311,430 @@ class QuizEngine:
         }
     ]
 
+    COURSE_BANKS = {
+        "deep_learning": {
+            "mcqs": QUESTION_BANK,
+            "short": SHORT_QUESTIONS,
+            "long": LONG_QUESTIONS
+        },
+        "dsa": {
+            "mcqs": [
+                {
+                    "id": "dsa_q1",
+                    "topic": "Arrays & Dynamic Resizing",
+                    "type": "mcq",
+                    "difficulty": "easy",
+                    "question": "What is the amortized time complexity of appending an element to a dynamic array?",
+                    "options": [
+                        "A. O(n)",
+                        "B. O(log n)",
+                        "C. O(1)",
+                        "D. O(n^2)"
+                    ],
+                    "correct_index": 2,
+                    "explanation": "Although capacity doubling takes O(n) copying, doubling occurs rarely (exponentially spaced). Total cost over n insertions is O(2n) = O(n), yielding an amortized complexity of O(1).",
+                    "source_doc": "DSA_Core_Curriculum.txt",
+                    "source_page": "Chapter 1"
+                },
+                {
+                    "id": "dsa_q2",
+                    "topic": "Hash Tables & Collision Resolution",
+                    "type": "mcq",
+                    "difficulty": "medium",
+                    "question": "Which collision resolution strategy stores collided key-value pairs in a linked list at bucket indices?",
+                    "options": [
+                        "A. Linear Probing",
+                        "B. Double Hashing",
+                        "C. Separate Chaining",
+                        "D. Quadratic Probing"
+                    ],
+                    "correct_index": 2,
+                    "explanation": "Separate Chaining maintains an independent linked list (or small tree) in each bucket to chain keys that hash to the same index.",
+                    "source_doc": "DSA_Core_Curriculum.txt",
+                    "source_page": "Chapter 2"
+                },
+                {
+                    "id": "dsa_q3",
+                    "topic": "Binary Search Trees & AVL",
+                    "type": "mcq",
+                    "difficulty": "medium",
+                    "question": "In an AVL tree, what is the maximum allowed difference between the heights of the left and right subtrees of any node?",
+                    "options": [
+                        "A. 0",
+                        "B. 1",
+                        "C. 2",
+                        "D. log(n)"
+                    ],
+                    "correct_index": 1,
+                    "explanation": "An AVL tree enforces a balance factor difference of at most 1 (-1, 0, or +1). If the difference exceeds 1, tree rotations are triggered.",
+                    "source_doc": "DSA_Core_Curriculum.txt",
+                    "source_page": "Chapter 3"
+                },
+                {
+                    "id": "dsa_q4",
+                    "topic": "Dijkstra Shortest Paths",
+                    "type": "mcq",
+                    "difficulty": "hard",
+                    "question": "Which algorithm finds single-source shortest paths on weighted graphs with non-negative edge weights?",
+                    "options": [
+                        "A. Breadth-First Search",
+                        "B. Dijkstra's Algorithm",
+                        "C. Kosaraju's Algorithm",
+                        "D. Kruskal's Algorithm"
+                    ],
+                    "correct_index": 1,
+                    "explanation": "Dijkstra's algorithm greedily extracts the vertex with minimum distance using a min-heap priority queue, running in O((V + E) log V) time.",
+                    "source_doc": "DSA_Core_Curriculum.txt",
+                    "source_page": "Chapter 4"
+                },
+                {
+                    "id": "dsa_q5",
+                    "topic": "Dynamic Programming & Memoization",
+                    "type": "mcq",
+                    "difficulty": "medium",
+                    "question": "What two fundamental characteristics make a problem suitable for Dynamic Programming?",
+                    "options": [
+                        "A. Greedy choice and non-overlapping subproblems",
+                        "B. Optimal substructure and overlapping subproblems",
+                        "C. Divide-and-conquer and infinite recursion",
+                        "D. Linear equations and sparse matrices"
+                    ],
+                    "correct_index": 1,
+                    "explanation": "Dynamic Programming requires Optimal Substructure (optimal global solution incorporates optimal subproblem solutions) and Overlapping Subproblems.",
+                    "source_doc": "DSA_Core_Curriculum.txt",
+                    "source_page": "Chapter 5"
+                },
+                {
+                    "id": "dsa_q6",
+                    "topic": "Asymptotic Analysis & Big-O",
+                    "type": "mcq",
+                    "difficulty": "easy",
+                    "question": "Which asymptotic notation represents a mathematically tight bound on algorithm running time?",
+                    "options": [
+                        "A. Big-O (O)",
+                        "B. Big-Omega (Ω)",
+                        "C. Big-Theta (Θ)",
+                        "D. Little-o (o)"
+                    ],
+                    "correct_index": 2,
+                    "explanation": "Big-Theta represents a tight bound where f(n) = Θ(g(n)) means f(n) is bounded both above and below by constants multiplied by g(n).",
+                    "source_doc": "DSA_Core_Curriculum.txt",
+                    "source_page": "Chapter 1"
+                },
+                {
+                    "id": "dsa_q7",
+                    "topic": "Graph Traversals (BFS & DFS)",
+                    "type": "mcq",
+                    "difficulty": "easy",
+                    "question": "Which data structure is primarily utilized by Breadth-First Search (BFS)?",
+                    "options": [
+                        "A. LIFO Stack",
+                        "B. FIFO Queue",
+                        "C. Binary Max-Heap",
+                        "D. Disjoint Set Union"
+                    ],
+                    "correct_index": 1,
+                    "explanation": "BFS uses a FIFO queue to visit all neighbors at distance d before exploring vertices at distance d+1.",
+                    "source_doc": "DSA_Core_Curriculum.txt",
+                    "source_page": "Chapter 4"
+                },
+                {
+                    "id": "dsa_q8",
+                    "topic": "Dynamic Programming & Memoization",
+                    "type": "mcq",
+                    "difficulty": "hard",
+                    "question": "What is the time complexity of solving the 0/1 Knapsack problem for n items and capacity W using Dynamic Programming?",
+                    "options": [
+                        "A. O(n log n)",
+                        "B. O(n * W) pseudo-polynomial time",
+                        "C. O(2^n) strictly polynomial time",
+                        "D. O(W^2)"
+                    ],
+                    "correct_index": 1,
+                    "explanation": "The standard DP table has dimensions (n+1) x (W+1), filled in O(n * W) pseudo-polynomial time.",
+                    "source_doc": "DSA_Core_Curriculum.txt",
+                    "source_page": "Chapter 5"
+                }
+            ],
+            "short": [
+                {
+                    "id": "dsa_sq1",
+                    "topic": "Arrays & Dynamic Resizing",
+                    "question": "Explain how dynamic arrays achieve amortized O(1) append time despite O(n) array copying.",
+                    "key_keywords": ["amortized", "doubling", "geometric", "copying", "o(1)"],
+                    "model_answer": "Dynamic arrays double capacity whenever full. Although an insertion causing doubling takes O(n) copying, n insertions only cause O(2n) total copy operations, resulting in an amortized O(1) cost per append."
+                },
+                {
+                    "id": "dsa_sq2",
+                    "topic": "Dynamic Programming & Memoization",
+                    "question": "Explain the difference between Top-Down Memoization and Bottom-Up Tabulation in Dynamic Programming.",
+                    "key_keywords": ["memoization", "recursion", "tabulation", "iterative", "table"],
+                    "model_answer": "Top-Down memoization uses recursion combined with a lookup cache to solve only required subproblems. Bottom-Up tabulation iteratively fills a table starting from base cases, avoiding recursion stack overhead."
+                }
+            ],
+            "long": [
+                {
+                    "id": "dsa_lq1",
+                    "topic": "Dynamic Programming & Memoization",
+                    "question": "Formulate the recurrence relation for the 0/1 Knapsack Problem and explain how the DP table is constructed.",
+                    "criteria": [
+                        "Base case definition: dp[0][w] = 0 and dp[i][0] = 0",
+                        "Recurrence relation: dp[i][w] = max(dp[i-1][w], val[i] + dp[i-1][w-weight[i]]) when weight[i] <= w",
+                        "Explanation of state dimensions (items i and remaining capacity w)",
+                        "Time complexity analysis: O(n * W) pseudo-polynomial"
+                    ],
+                    "difficulty": "hard",
+                    "source_doc": "DSA_Core_Curriculum.txt"
+                }
+            ]
+        },
+        "operating_systems": {
+            "mcqs": [
+                {
+                    "id": "os_q1",
+                    "topic": "Process Lifecycle & Context Switching",
+                    "type": "mcq",
+                    "difficulty": "easy",
+                    "question": "Which data structure holds process hardware registers, PID, and memory management state?",
+                    "options": [
+                        "A. Translation Lookaside Buffer (TLB)",
+                        "B. Process Control Block (PCB)",
+                        "C. Inode Table",
+                        "D. Mutex Semaphore"
+                    ],
+                    "correct_index": 1,
+                    "explanation": "The Process Control Block (PCB) stores execution context, program counter, register values, memory limits, and open file descriptors.",
+                    "source_doc": "OS_Concepts_and_Architecture.txt",
+                    "source_page": "Chapter 1"
+                },
+                {
+                    "id": "os_q2",
+                    "topic": "CPU Scheduling (FCFS, SJF, RR)",
+                    "type": "mcq",
+                    "difficulty": "medium",
+                    "question": "What is the primary drawback of First-Come, First-Served (FCFS) CPU scheduling?",
+                    "options": [
+                        "A. Excessive context switch overhead",
+                        "B. The Convoy Effect where small jobs wait behind large CPU bursts",
+                        "C. High memory consumption by priority queues",
+                        "D. Inability to run multi-threaded processes"
+                    ],
+                    "correct_index": 1,
+                    "explanation": "FCFS suffers from the Convoy Effect: short I/O-bound processes queue behind a massive CPU-bound process, resulting in poor average turnaround time.",
+                    "source_doc": "OS_Concepts_and_Architecture.txt",
+                    "source_page": "Chapter 2"
+                },
+                {
+                    "id": "os_q3",
+                    "topic": "Deadlocks & Banker's Algorithm",
+                    "type": "mcq",
+                    "difficulty": "medium",
+                    "question": "Which of the following is NOT one of the four Coffman conditions required for system deadlock?",
+                    "options": [
+                        "A. Mutual Exclusion",
+                        "B. Hold and Wait",
+                        "C. Preemptive Resource Seizure",
+                        "D. Circular Wait"
+                    ],
+                    "correct_index": 2,
+                    "explanation": "The third Coffman condition is 'No Preemption' (resources cannot be forcibly taken away). Preemption prevents deadlocks.",
+                    "source_doc": "OS_Concepts_and_Architecture.txt",
+                    "source_page": "Chapter 3"
+                },
+                {
+                    "id": "os_q4",
+                    "topic": "Page Replacement (FIFO, LRU, Clock)",
+                    "type": "mcq",
+                    "difficulty": "hard",
+                    "question": "Which page replacement algorithm can experience Belady's Anomaly where more frames lead to more page faults?",
+                    "options": [
+                        "A. Least Recently Used (LRU)",
+                        "B. Optimal Page Replacement (OPT)",
+                        "C. First-In, First-Out (FIFO)",
+                        "D. Second-Chance Clock Algorithm"
+                    ],
+                    "correct_index": 2,
+                    "explanation": "FIFO is not a stack algorithm, so increasing the physical frame allocation can paradoxically cause an increase in page faults (Belady's Anomaly).",
+                    "source_doc": "OS_Concepts_and_Architecture.txt",
+                    "source_page": "Chapter 4"
+                },
+                {
+                    "id": "os_q5",
+                    "topic": "Virtual Memory & Paging",
+                    "type": "mcq",
+                    "difficulty": "easy",
+                    "question": "What is the primary role of the Translation Lookaside Buffer (TLB)?",
+                    "options": [
+                        "A. To store dirty swap blocks on SSD storage",
+                        "B. To cache recent virtual-to-physical address page translations in fast associative hardware",
+                        "C. To prevent race conditions in multithreaded programs",
+                        "D. To schedule CPU threads across multiple cores"
+                    ],
+                    "correct_index": 1,
+                    "explanation": "The TLB is a high-speed hardware associative cache that stores page table mappings to avoid dual memory accesses during translation.",
+                    "source_doc": "OS_Concepts_and_Architecture.txt",
+                    "source_page": "Chapter 4"
+                }
+            ],
+            "short": [
+                {
+                    "id": "os_sq1",
+                    "topic": "Deadlocks & Banker's Algorithm",
+                    "question": "Name the four Coffman conditions required for a system deadlock.",
+                    "key_keywords": ["mutual exclusion", "hold and wait", "no preemption", "circular wait"],
+                    "model_answer": "The four Coffman conditions are: (1) Mutual Exclusion, (2) Hold and Wait, (3) No Preemption, and (4) Circular Wait."
+                }
+            ],
+            "long": [
+                {
+                    "id": "os_lq1",
+                    "topic": "Virtual Memory & Paging",
+                    "question": "Detail the sequence of events that occurs when an instruction triggers a Page Fault in an operating system.",
+                    "criteria": [
+                        "Hardware trap to kernel due to invalid page table bit",
+                        "Preservation of CPU registers and faulting instruction state",
+                        "Disk I/O request to fetch missing page from swap space into a free frame",
+                        "Page table update (frame assignment and valid bit set to 1) and instruction restart"
+                    ],
+                    "difficulty": "hard",
+                    "source_doc": "OS_Concepts_and_Architecture.txt"
+                }
+            ]
+        },
+        "linear_algebra": {
+            "mcqs": [
+                {
+                    "id": "la_q1",
+                    "topic": "Four Fundamental Subspaces",
+                    "type": "mcq",
+                    "difficulty": "medium",
+                    "question": "For an m x n matrix A with rank r, what is the dimension of its Nullspace N(A)?",
+                    "options": [
+                        "A. r",
+                        "B. m - r",
+                        "C. n - r",
+                        "D. m + n - r"
+                    ],
+                    "correct_index": 2,
+                    "explanation": "By the Rank-Nullity Theorem, rank(A) + nullity(A) = n. Therefore, dim(N(A)) = n - r.",
+                    "source_doc": "Linear_Algebra_Core_Concepts.txt",
+                    "source_page": "Chapter 2"
+                },
+                {
+                    "id": "la_q2",
+                    "topic": "Orthogonal Projections & Least Squares",
+                    "type": "mcq",
+                    "difficulty": "medium",
+                    "question": "When solving an inconsistent system A * x = b, what are the normal equations for Ordinary Least Squares?",
+                    "options": [
+                        "A. A * x = b",
+                        "B. A^T * A * x = A^T * b",
+                        "C. A * A^T * x = b",
+                        "D. (A^T + A) * x = b"
+                    ],
+                    "correct_index": 1,
+                    "explanation": "Projecting b orthogonally onto the column space of A yields the normal equation A^T * A * x_hat = A^T * b.",
+                    "source_doc": "Linear_Algebra_Core_Concepts.txt",
+                    "source_page": "Chapter 3"
+                },
+                {
+                    "id": "la_q3",
+                    "topic": "Spectral Theorem & Diagonalization",
+                    "type": "mcq",
+                    "difficulty": "easy",
+                    "question": "What does the Spectral Theorem guarantee for real symmetric matrices (A = A^T)?",
+                    "options": [
+                        "A. All eigenvalues are strictly complex conjugates",
+                        "B. All eigenvalues are real and eigenvectors can be chosen to be orthonormal",
+                        "C. The matrix determinant is always zero",
+                        "D. The matrix has no inverse"
+                    ],
+                    "correct_index": 1,
+                    "explanation": "The Spectral Theorem guarantees that real symmetric matrices have all real eigenvalues and an orthogonal matrix of eigenvectors Q such that A = Q * Lambda * Q^T.",
+                    "source_doc": "Linear_Algebra_Core_Concepts.txt",
+                    "source_page": "Chapter 4"
+                },
+                {
+                    "id": "la_q4",
+                    "topic": "Singular Value Decomposition (SVD)",
+                    "type": "mcq",
+                    "difficulty": "hard",
+                    "question": "In Singular Value Decomposition A = U * Sigma * V^T, what do the columns of U represent?",
+                    "options": [
+                        "A. Eigenvectors of A^T * A",
+                        "B. Eigenvectors of A * A^T",
+                        "C. Singular values along the diagonal",
+                        "D. The nullspace coordinates of A"
+                    ],
+                    "correct_index": 1,
+                    "explanation": "The left singular vectors (columns of U) are the orthonormal eigenvectors of A * A^T.",
+                    "source_doc": "Linear_Algebra_Core_Concepts.txt",
+                    "source_page": "Chapter 5"
+                }
+            ],
+            "short": [
+                {
+                    "id": "la_sq1",
+                    "topic": "Four Fundamental Subspaces",
+                    "question": "State the Rank-Nullity Theorem and identify the orthogonal complement of the Nullspace N(A).",
+                    "key_keywords": ["rank", "nullity", "n", "row space", "orthogonal"],
+                    "model_answer": "The Rank-Nullity Theorem states that for an m x n matrix A, rank(A) + nullity(A) = n. The orthogonal complement of the Nullspace N(A) is the Row Space C(A^T)."
+                }
+            ],
+            "long": [
+                {
+                    "id": "la_lq1",
+                    "topic": "Singular Value Decomposition (SVD)",
+                    "question": "State the Eckart-Young-Mirsky Theorem and explain how truncated SVD provides optimal low-rank matrix approximations.",
+                    "criteria": [
+                        "Definition of SVD decomposition: A = U * Sigma * V^T",
+                        "Truncation to k singular values: A_k = sum_{i=1}^k sigma_i * u_i * v_i^T",
+                        "Minimization of matrix error ||A - A_k|| under Frobenius and spectral norms",
+                        "Practical applications in PCA dimensionality reduction and data compression"
+                    ],
+                    "difficulty": "hard",
+                    "source_doc": "Linear_Algebra_Core_Concepts.txt"
+                }
+            ]
+        }
+    }
+
+    active_course_id = "deep_learning"
+
+    @classmethod
+    def switch_course(cls, course_id: str):
+        cls.active_course_id = course_id
+        bank = cls.COURSE_BANKS.get(course_id, cls.COURSE_BANKS["deep_learning"])
+        cls.QUESTION_BANK = bank["mcqs"]
+        cls.SHORT_QUESTIONS = bank["short"]
+        cls.LONG_QUESTIONS = bank["long"]
+
     @classmethod
     def generate_quiz(cls, topic_filter: Optional[str] = None, difficulty: str = "adaptive", count_mcq: int = 10, count_short: int = 5, count_long: int = 3) -> Dict[str, Any]:
         """
-        Generates a balanced quiz package:
-        - 10 MCQs
-        - 5 Short Answer Questions
-        - 3 Long Conceptual Questions
+        Generates a balanced quiz package from the active course's question bank.
         """
-        all_mcqs = list(cls.QUESTION_BANK)
-        all_short = list(cls.SHORT_QUESTIONS)
-        all_long = list(cls.LONG_QUESTIONS)
+        bank = cls.COURSE_BANKS.get(cls.active_course_id, cls.COURSE_BANKS["deep_learning"])
+        all_mcqs = list(bank["mcqs"])
+        all_short = list(bank["short"])
+        all_long = list(bank["long"])
 
         if topic_filter and topic_filter.lower() != "all":
             tf = topic_filter.lower()
-            all_mcqs = [q for q in all_mcqs if tf in q["topic"].lower()] or all_mcqs
-            all_short = [q for q in all_short if tf in q["topic"].lower()] or all_short
-            all_long = [q for q in all_long if tf in q["topic"].lower()] or all_long
+            filtered_mcqs = [q for q in all_mcqs if tf in q["topic"].lower()]
+            if filtered_mcqs:
+                all_mcqs = filtered_mcqs
+            filtered_short = [q for q in all_short if tf in q["topic"].lower()]
+            if filtered_short:
+                all_short = filtered_short
+            filtered_long = [q for q in all_long if tf in q["topic"].lower()]
+            if filtered_long:
+                all_long = filtered_long
 
-        # If adaptive, we provide a mix or filter by target difficulty
         if difficulty in ["easy", "medium", "hard"]:
-            filtered_mcqs = [q for q in all_mcqs if q.get("difficulty") == difficulty]
-            if len(filtered_mcqs) >= 5:
-                selected_mcqs = filtered_mcqs[:count_mcq]
+            diff_mcqs = [q for q in all_mcqs if q.get("difficulty") == difficulty]
+            if len(diff_mcqs) >= 3:
+                selected_mcqs = diff_mcqs[:count_mcq]
             else:
                 selected_mcqs = all_mcqs[:count_mcq]
         else:
@@ -342,16 +743,12 @@ class QuizEngine:
         selected_short = all_short[:count_short]
         selected_long = all_long[:count_long]
 
-        # Hide answers from student quiz payload
-        student_mcqs = []
-        for q in selected_mcqs:
-            q_clean = dict(q)
-            # Retain correct_index in background for instant checking, but frontend can evaluate via API
-            student_mcqs.append(q_clean)
+        student_mcqs = [dict(q) for q in selected_mcqs]
 
         return {
             "quiz_id": f"quiz_{random.randint(1000, 9999)}",
-            "topic": topic_filter or "Deep Learning & Neural Networks Curriculum",
+            "course_id": cls.active_course_id,
+            "topic": topic_filter or "Curriculum Assessment",
             "difficulty_mode": difficulty,
             "mcqs": student_mcqs,
             "short_questions": selected_short,
@@ -364,14 +761,20 @@ class QuizEngine:
         """
         Evaluates a single MCQ submission, adjusts adaptive difficulty, and gives complete explanations.
         """
+        # Search active bank first, then all banks
         question = next((q for q in cls.QUESTION_BANK if q["id"] == question_id), None)
+        if not question:
+            for bank in cls.COURSE_BANKS.values():
+                question = next((q for q in bank["mcqs"] if q["id"] == question_id), None)
+                if question:
+                    break
+
         if not question:
             return {"error": "Question not found"}
 
         is_correct = (selected_option_index == question["correct_index"])
         new_streak = (current_streak + 1) if is_correct else 0
 
-        # Adaptive difficulty adjustment
         new_difficulty = current_difficulty
         if is_correct:
             if new_streak >= 2:
@@ -404,10 +807,13 @@ class QuizEngine:
 
     @classmethod
     def evaluate_short_answer(cls, question_id: str, student_answer: str) -> Dict[str, Any]:
-        """
-        Evaluates a student's short answer against key concept rubrics.
-        """
         question = next((q for q in cls.SHORT_QUESTIONS if q["id"] == question_id), None)
+        if not question:
+            for bank in cls.COURSE_BANKS.values():
+                question = next((q for q in bank["short"] if q["id"] == question_id), None)
+                if question:
+                    break
+
         if not question:
             return {"error": "Question not found"}
 
@@ -422,16 +828,11 @@ class QuizEngine:
             }
 
         required_keywords = question["key_keywords"]
-        matched_keywords = []
-
-        for kw in required_keywords:
-            if kw.lower() in answer_clean:
-                matched_keywords.append(kw)
+        matched_keywords = [kw for kw in required_keywords if kw.lower() in answer_clean]
 
         coverage_ratio = len(matched_keywords) / max(1, len(required_keywords))
         score = int(coverage_ratio * 100)
 
-        # Length and fluency bonus
         if len(answer_clean.split()) >= 15 and score > 30:
             score = min(100, score + 10)
 

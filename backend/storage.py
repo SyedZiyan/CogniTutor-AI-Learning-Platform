@@ -83,12 +83,31 @@ class StorageManager:
     def get_document_chunks(self, doc_id: str) -> List[Dict[str, Any]]:
         return [c.to_dict() for c in self.chunks if c.doc_id == doc_id]
 
-    def get_library_summary(self) -> Dict[str, Any]:
+    def refresh_for_active_course(self, course_id: str, sample_files: List[str]):
+        """
+        Refreshes chunks and ensures all sample materials for the course are indexed.
+        """
+        for file_name in sample_files:
+            file_path = os.path.join(SAMPLE_MATERIALS_DIR, file_name)
+            if os.path.isfile(file_path):
+                # Ensure it's indexed
+                matching = [d for d in self.documents.values() if d.get("file_name") == file_name]
+                if not matching:
+                    self.index_file(file_path, is_sample=True)
+
+        rag_engine.set_chunks(self.chunks)
+
+    def get_library_summary(self, course_id: Optional[str] = None) -> Dict[str, Any]:
+        doc_list = []
+        for d in self.documents.values():
+            d_copy = dict(d)
+            doc_list.append(d_copy)
+
         return {
             "total_documents": len(self.documents),
             "total_chunks": len(self.chunks),
             "supported_types": ["PDF", "PPTX", "DOCX", "TXT", "MD"],
-            "documents": list(self.documents.values())
+            "documents": doc_list
         }
 
 storage_manager = StorageManager()

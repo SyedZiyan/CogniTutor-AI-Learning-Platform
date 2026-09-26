@@ -8,8 +8,8 @@
     "chunk_count": 5,
     "topics": [
       "Deep Learning Fundamentals",
-      "Convolutional Neural Networks (CNN)",
-      "Neural Networks"
+      "Neural Networks",
+      "Convolutional Neural Networks (CNN)"
     ],
     "is_sample": true
   },
@@ -22,9 +22,49 @@
     "chunk_count": 7,
     "topics": [
       "Backpropagation & Optimization",
-      "Forward & Loss Functions",
       "Overfitting & Regularization",
-      "Neural Networks"
+      "Neural Networks",
+      "Forward & Loss Functions"
+    ],
+    "is_sample": true
+  },
+  "84288da1": {
+    "doc_id": "84288da1",
+    "file_name": "DSA_Core_Curriculum.txt",
+    "file_path": "C:\\Users\\syedz\\.gemini\\antigravity\\scratch\\ai_learning_platform\\sample_materials\\DSA_Core_Curriculum.txt",
+    "file_type": "TXT",
+    "file_size_kb": 4.6,
+    "chunk_count": 10,
+    "topics": [
+      "Attention & Transformers",
+      "Deep Learning Fundamentals",
+      "Recurrent Neural Networks (RNN)"
+    ],
+    "is_sample": true
+  },
+  "ae24d8a6": {
+    "doc_id": "ae24d8a6",
+    "file_name": "Linear_Algebra_Core_Concepts.txt",
+    "file_path": "C:\\Users\\syedz\\.gemini\\antigravity\\scratch\\ai_learning_platform\\sample_materials\\Linear_Algebra_Core_Concepts.txt",
+    "file_type": "TXT",
+    "file_size_kb": 5.0,
+    "chunk_count": 10,
+    "topics": [
+      "Deep Learning Fundamentals",
+      "Vanishing Gradient Problem"
+    ],
+    "is_sample": true
+  },
+  "ec947c16": {
+    "doc_id": "ec947c16",
+    "file_name": "OS_Concepts_and_Architecture.txt",
+    "file_path": "C:\\Users\\syedz\\.gemini\\antigravity\\scratch\\ai_learning_platform\\sample_materials\\OS_Concepts_and_Architecture.txt",
+    "file_type": "TXT",
+    "file_size_kb": 6.9,
+    "chunk_count": 14,
+    "topics": [
+      "Deep Learning Fundamentals",
+      "Convolutional Neural Networks (CNN)"
     ],
     "is_sample": true
   },
@@ -36,10 +76,10 @@
     "file_size_kb": 35.5,
     "chunk_count": 6,
     "topics": [
-      "Gated Recurrent Units (GRU)",
-      "Vanishing Gradient Problem",
+      "Long Short-Term Memory (LSTM)",
       "Recurrent Neural Networks (RNN)",
-      "Long Short-Term Memory (LSTM)"
+      "Gated Recurrent Units (GRU)",
+      "Vanishing Gradient Problem"
     ],
     "is_sample": true
   },

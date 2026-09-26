@@ -1,0 +1,67 @@
+================================================================================
+COURSE CS-201: DATA STRUCTURES & ALGORITHMS (CORE CURRICULUM NOTES)
+Author: Prof. Donald Knuth | Department of Computer Science
+================================================================================
+
+[PAGE 1] CHAPTER 1: ASYMPTOTIC COMPLEXITY & ARRAYS
+Asymptotic notation characterizes algorithm resource utilization as input size n grows to infinity.
+1. Big-O Notation (Upper Bound): Represents worst-case running time O(g(n)).
+2. Big-Omega (Lower Bound): Represents best-case running time Ω(g(n)).
+3. Big-Theta (Tight Bound): Represents exact order of growth Θ(g(n)).
+
+Array Operations & Amortized Analysis:
+- Contiguous memory allocation enables O(1) random access by index via base address arithmetic: Addr(A[i]) = Base + i * sizeof(element).
+- Fixed arrays suffer from static sizing. Dynamic arrays (e.g. ArrayList, Python list) double capacity upon saturation.
+- Amortized Cost of Append: Although resizing takes O(n) copying, doubling occurs infrequently. Total cost of n insertions is O(2n) = O(n), yielding an amortized insertion complexity of O(1).
+- Linear search takes O(n). Binary search on a sorted array takes O(log n) time by halving the search space at each iteration.
+
+[PAGE 2] CHAPTER 2: HASH TABLES & LINKED STRUCTURES
+Hash Maps:
+- Map key-value pairs using a deterministic hash function h(k) mapping keys to bucket indices.
+- Collision Resolution Strategies:
+  a) Separate Chaining: Each bucket holds a linked list of collided key-value pairs. Average lookup O(1), worst-case O(n) under pathological hash collisions.
+  b) Open Addressing (Linear Probing / Double Hashing): Collided keys probe subsequent buckets in array. Suffers from primary clustering when load factor α = n/m exceeds 0.7.
+- Universal Hashing guarantees low collision probability over arbitrary input sequences.
+
+Singly and Doubly Linked Lists:
+- Non-contiguous memory allocation where each node contains data and pointer(s) to neighbor(s).
+- Prepend/Insert at head takes O(1) time. Deletion of a given node in doubly linked list takes O(1).
+- Traversal and search require O(n) sequential pointer chasing with poor CPU cache locality compared to contiguous arrays.
+
+[PAGE 3] CHAPTER 3: BINARY SEARCH TREES & BALANCED TREES
+Hierarchical Tree Structures:
+- A Binary Search Tree (BST) maintains the invariant: For any node X, all elements in LeftSubtree(X) < X.val, and all elements in RightSubtree(X) > X.val.
+- Inorder traversal of a BST yields elements in strictly sorted order.
+- Time Complexity:
+  - Balanced BST (AVL, Red-Black Tree): Search, Insert, and Delete take O(log n) time.
+  - Degenerate BST (inserted in sorted order): Tree degenerates into a linked list with O(n) height and linear search time.
+- Self-Balancing Mechanisms:
+  - AVL trees enforce a strict balance factor difference of at most 1 between left and right subtree heights, rebalancing via single (LL, RR) or double (LR, RL) rotations.
+
+[PAGE 4] CHAPTER 4: GRAPH ALGORITHMS & TRAVERSALS (DFS / BFS)
+Graph Representations:
+1. Adjacency Matrix: Space complexity O(V^2). Efficient for dense graphs, O(1) edge existence queries.
+2. Adjacency List: Space complexity O(V + E). Space-optimal for sparse graphs.
+
+Graph Traversals:
+- Breadth-First Search (BFS):
+  - Employs a First-In-First-Out (FIFO) queue.
+  - Explores level by level. Guarantees finding the shortest path in unweighted graphs in O(V + E) time.
+- Depth-First Search (DFS):
+  - Employs recursion or a Last-In-First-Out (LIFO) stack.
+  - Useful for cycle detection (back-edges), topological sorting in Directed Acyclic Graphs (DAG), and connected components.
+- Dijkstra's Algorithm:
+  - Computes single-source shortest paths on graphs with non-negative edge weights using a min-priority heap in O((V + E) log V) time.
+
+[PAGE 5] CHAPTER 5: DYNAMIC PROGRAMMING & RECURSIVE OPTIMIZATION
+Dynamic Programming (DP) Prerequisites:
+1. Optimal Substructure: An optimal solution to the overall problem incorporates optimal solutions to its subproblems.
+2. Overlapping Subproblems: The same subproblems are solved repeatedly during naive recursion (e.g. recursive Fibonacci takes O(2^n) exponential time).
+
+Implementation Methodologies:
+- Top-Down (Memoization): Recursive exploration augmented with a hash table or cache to store subproblem solutions.
+- Bottom-Up (Tabulation): Iterative computation starting from base cases and populating a DP array or matrix.
+
+Canonical DP Archetypes:
+- 0/1 Knapsack Problem: dp[i][w] = max(dp[i-1][w], value[i] + dp[i-1][w - weight[i]]). Runs in pseudo-polynomial time O(n * W).
+- Longest Common Subsequence (LCS): Match characters to advance diagonal dp[i-1][j-1] + 1 or take max(dp[i-1][j], dp[i][j-1]).

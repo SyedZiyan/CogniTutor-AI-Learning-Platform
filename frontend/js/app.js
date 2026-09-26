@@ -56,8 +56,68 @@ function playMistakeSound() {
   }
 }
 
+// Floating Frosted Glass Toast Notification System
+function showToast(message, type = 'info') {
+  let container = document.getElementById('cogni-toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'cogni-toast-container';
+    document.body.appendChild(container);
+  }
+
+  const toast = document.createElement('div');
+  toast.className = `cogni-toast toast-${type}`;
+  
+  let iconName = 'info';
+  if (type === 'success') iconName = 'check-circle-2';
+  if (type === 'error') iconName = 'alert-triangle';
+
+  toast.innerHTML = `
+    <i data-lucide="${iconName}" class="w-4 h-4 shrink-0"></i>
+    <span class="flex-1">${message}</span>
+  `;
+
+  container.appendChild(toast);
+  lucide.createIcons({ root: toast });
+
+  setTimeout(() => {
+    toast.classList.add('toast-leave');
+    setTimeout(() => {
+      if (toast.parentNode) toast.parentNode.removeChild(toast);
+    }, 280);
+  }, 3600);
+}
+
+// Theme Toggle (Obsidian Dark Glass vs Frosted Light Glass)
+function initTheme() {
+  const savedTheme = localStorage.getItem('cogni_theme') || 'dark'; // Default to sleek obsidian dark glass
+  if (savedTheme === 'dark') {
+    document.body.classList.add('dark-theme');
+  } else {
+    document.body.classList.remove('dark-theme');
+  }
+  updateThemeIcon();
+}
+
+function toggleTheme() {
+  document.body.classList.toggle('dark-theme');
+  const isDark = document.body.classList.contains('dark-theme');
+  localStorage.setItem('cogni_theme', isDark ? 'dark' : 'light');
+  updateThemeIcon();
+  showToast(isDark ? "🌙 Obsidian Dark Glass Mode activated" : "☀️ Frosted Light Glass Mode activated", "info");
+}
+
+function updateThemeIcon() {
+  const icon = document.getElementById('theme-toggle-icon');
+  if (!icon) return;
+  const isDark = document.body.classList.contains('dark-theme');
+  icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+  lucide.createIcons();
+}
+
 // Initialize App
 document.addEventListener('DOMContentLoaded', async () => {
+  initTheme();
   lucide.createIcons();
   setupNavigation();
   setupVoice();
@@ -68,6 +128,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Load initial data
   await refreshGamificationUI();
   await refreshDashboard();
+
+  // Visual confirmation toast
+  setTimeout(() => {
+    showToast("✨ CogniTutor Pro Glass v3.5 Loaded (Animations & Blurs Active)", "success");
+  }, 400);
 });
 
 // Navigation Controller
@@ -294,12 +359,13 @@ async function handleFileUpload(file) {
     if (uploadStatus) {
       uploadStatus.innerText = `✓ Successfully added ${file.name} to library (+50 XP)`;
     }
+    showToast(`Added ${file.name} to library (+50 XP)`, "success");
     triggerConfetti();
     playSuccessChime();
     await loadDocumentLibrary();
     await refreshGamificationUI();
   } catch (err) {
-    alert("Upload failed: " + err.message);
+    showToast("Upload failed: " + err.message, "error");
     if (uploadStatus) uploadStatus.classList.add('hidden');
   }
 }
@@ -387,7 +453,7 @@ async function viewDocumentChunks(docId, docName) {
 
     modal.classList.remove('hidden');
   } catch (err) {
-    alert("Could not load chunks: " + err.message);
+    showToast("Could not load chunks: " + err.message, "error");
   }
 }
 
@@ -607,7 +673,7 @@ async function triggerDoubtSolver(topic) {
     renderCurrentDoubtExplanation();
     await refreshGamificationUI();
   } catch (err) {
-    alert("Doubt solver error: " + err.message);
+    showToast("Doubt solver error: " + err.message, "error");
   }
 }
 
@@ -904,7 +970,7 @@ async function submitShortAnswer(questionId) {
     `;
     await refreshGamificationUI();
   } catch (err) {
-    alert("Evaluation failed: " + err.message);
+    showToast("Evaluation failed: " + err.message, "error");
   }
 }
 
@@ -1057,10 +1123,10 @@ async function savePlatformSettings() {
       openai_api_key: openaiKey || undefined,
       gemini_api_key: geminiKey || undefined
     });
-    alert("Settings saved successfully!");
+    showToast("Settings saved successfully!", "success");
     toggleSettingsDrawer();
   } catch (e) {
-    alert("Error saving settings: " + e.message);
+    showToast("Error saving settings: " + e.message, "error");
   }
 }
 
@@ -1527,8 +1593,9 @@ async function startNewVivaSession(topicOverride) {
 
     // Examiner voice introduction
     voiceTutor.speak(session.audio_intro || session.question);
+    showToast(`Viva Exam Begun: Round 1 of ${session.total_rounds}`, "info");
   } catch (err) {
-    alert("Could not start viva: " + err.message);
+    showToast("Could not start viva: " + err.message, "error");
   }
 }
 
@@ -1568,13 +1635,14 @@ function toggleVivaSpeechRecognition() {
       micText.innerText = 'Click to Speak';
       statusLabel.innerText = 'Speech Captured';
       statusLabel.className = 'text-xs text-emerald-600 font-medium';
+      showToast("Speech captured into answer box", "success");
     });
   }
 }
 
 async function submitVivaDefense() {
   if (!appState.vivaSession || !appState.vivaSession.session_id) {
-    alert("Please click 'Begin Oral Exam' to initiate your examination session first.");
+    showToast("Please click 'Begin Oral Exam' to initiate your examination session first.", "info");
     return;
   }
 
@@ -1582,7 +1650,7 @@ async function submitVivaDefense() {
   const transcript = input ? input.value.trim() : '';
 
   if (!transcript) {
-    alert("Please articulate your technical answer or explanation before submitting.");
+    showToast("Please articulate your technical answer or explanation before submitting.", "info");
     return;
   }
 
@@ -1635,6 +1703,7 @@ async function submitVivaDefense() {
 
       playSuccessChime();
       triggerConfetti();
+      showToast(`Viva Concluded! Grade: ${res.final_score}% (${res.verdict})`, "success");
 
       // Speak examiner verdict
       voiceTutor.speak(`Oral examination concluded. Your final score is ${res.final_score} percent, achieving ${res.verdict}. Outstanding technical defense!`);
@@ -1647,12 +1716,13 @@ async function submitVivaDefense() {
       document.getElementById('viva-round-badge').innerText = `Round ${res.next_round} of 3`;
       document.getElementById('viva-question-text').innerText = res.next_question;
       input.value = '';
+      showToast(`Round ${res.round} Score: ${res.score_this_round}/100`, "info");
 
       // Examiner speaks the follow-up question
       voiceTutor.speak(`${res.feedback} ${res.next_question}`);
     }
   } catch (err) {
-    alert("Error evaluating viva response: " + err.message);
+    showToast("Error evaluating viva response: " + err.message, "error");
   } finally {
     submitBtn.disabled = false;
     submitBtn.innerHTML = `<i data-lucide="send" class="w-3.5 h-3.5"></i><span>Submit Defense</span>`;

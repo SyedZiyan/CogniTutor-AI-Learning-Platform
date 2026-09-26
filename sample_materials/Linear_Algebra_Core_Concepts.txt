@@ -1,0 +1,80 @@
+================================================================================
+COURSE MATH-214: LINEAR ALGEBRA & OPTIMIZATION FOR MACHINE LEARNING
+Author: Prof. Gilbert Strang | Mathematical Sciences Department
+================================================================================
+
+[PAGE 1] CHAPTER 1: VECTOR SPACES, SPAN & LINEAR INDEPENDENCE
+1. Vector Spaces & Subspaces:
+- A vector space V over a field F (typically R) is closed under vector addition (u + v in V) and scalar multiplication (c * u in V).
+- A subset W of V is a valid subspace if and only if:
+  1. The zero vector 0 is in W.
+  2. W is closed under vector addition: u, v in W => u + v in W.
+  3. W is closed under scalar multiplication: c in R, u in W => c * u in W.
+
+2. Linear Combinations and Span:
+- The span of a set of vectors {v1, v2, ..., vk} is the set of all possible linear combinations c1*v1 + c2*v2 + ... + ck*vk.
+- Linear Independence: Vectors {v1, ..., vk} are linearly independent if and only if c1*v1 + ... + ck*vk = 0 strictly implies c1 = c2 = ... = ck = 0.
+- Basis: A linearly independent set of vectors whose span equals the entire vector space V.
+- Dimension: The number of vectors in any basis of V (e.g. dim(R^n) = n).
+
+[PAGE 2] CHAPTER 2: FOUR FUNDAMENTAL SUBSPACES & MATRIX TRANSFORMATIONS
+1. The Four Fundamental Subspaces of an m x n Matrix A:
+- Column Space C(A): Span of columns of A in R^m. Dimension = rank r.
+- Nullspace N(A): Set of solutions to A*x = 0 in R^n. Dimension = n - r.
+- Row Space C(A^T): Span of rows of A in R^n. Dimension = rank r.
+- Left Nullspace N(A^T): Set of solutions to A^T * y = 0 in R^m. Dimension = m - r.
+
+2. Fundamental Theorem of Linear Algebra & Rank-Nullity:
+- Dim(C(A)) = Dim(C(A^T)) = r (Row rank equals column rank).
+- Rank-Nullity Theorem: For any m x n matrix A:
+  rank(A) + nullity(A) = n.
+- Orthogonality of Subspaces:
+  * The row space C(A^T) is the orthogonal complement of the nullspace N(A) in R^n: C(A^T) ⊥ N(A).
+  * The column space C(A) is the orthogonal complement of the left nullspace N(A^T) in R^m: C(A) ⊥ N(A^T).
+
+[PAGE 3] CHAPTER 3: ORTHOGONALITY, PROJECTIONS & LEAST SQUARES
+1. Inner Product & Orthogonal Vectors:
+- Inner product u^T * v = sum(u_i * v_i) = ||u|| * ||v|| * cos(θ).
+- Vectors are orthogonal if u^T * v = 0. Vectors are orthonormal if orthogonal and unit length (||u|| = 1).
+- An orthogonal matrix Q satisfies Q^T * Q = I, preserving vector lengths and angles: ||Q*x|| = ||x||.
+
+2. Orthogonal Projection & Least Squares:
+- When a system A*x = b has no exact solution (b is not in C(A)), we project b orthogonally onto C(A) as p = A * x_hat.
+- The error vector e = b - p is orthogonal to C(A): A^T * (b - A * x_hat) = 0.
+- Normal Equations for Ordinary Least Squares:
+  A^T * A * x_hat = A^T * b  =>  x_hat = (A^T * A)^{-1} * A^T * b.
+- Projection Matrix: P = A * (A^T * A)^{-1} * A^T. P is idempotent (P^2 = P) and symmetric (P^T = P).
+
+[PAGE 4] CHAPTER 4: EIGENVALUES, EIGENVECTORS & DIAGONALIZATION
+1. The Eigenvalue Equation:
+- For a square n x n matrix A, a non-zero vector v is an eigenvector with eigenvalue λ if:
+  A * v = λ * v   <=>   (A - λ * I) * v = 0.
+- Characteristic Polynomial: det(A - λ * I) = 0 yields n roots (eigenvalues).
+- Trace: sum(λ_i) = trace(A). Determinant: prod(λ_i) = det(A).
+
+2. Diagonalization:
+- If A has n linearly independent eigenvectors, A = S * Λ * S^{-1}, where S is the matrix of eigenvectors and Λ is diagonal matrix of eigenvalues.
+- Powers of matrices: A^k = S * Λ^k * S^{-1}, computing matrix powers in O(n) instead of O(k * n^3).
+
+3. Spectral Theorem for Symmetric Matrices:
+- If A is real and symmetric (A^T = A):
+  1. All eigenvalues are strictly real.
+  2. Eigenvectors corresponding to distinct eigenvalues are mutually orthogonal.
+  3. Spectral Decomposition: A = Q * Λ * Q^T, where Q is an orthogonal matrix (Q^T = Q^{-1}).
+
+[PAGE 5] CHAPTER 5: SINGULAR VALUE DECOMPOSITION (SVD) & OPTIMIZATION
+1. Singular Value Decomposition (SVD):
+- Every real m x n matrix A can be factored into:
+  A = U * Σ * V^T,
+  where U is an m x m orthogonal matrix (eigenvectors of A * A^T),
+  V is an n x n orthogonal matrix (eigenvectors of A^T * A),
+  and Σ is an m x n diagonal matrix containing singular values σ_1 >= σ_2 >= ... >= σ_r > 0.
+- Eckart-Young-Mirsky Theorem: The best rank-k approximation of A under Frobenius or spectral norm is given by truncating SVD to top-k singular values: A_k = sum_{i=1}^k σ_i * u_i * v_i^T.
+- Principal Component Analysis (PCA): Projecting centered data X onto the eigenvectors of the covariance matrix (1/n) * X^T * X identifies directions of maximal data variance.
+
+2. Multivariate Optimization & Hessian Matrices:
+- Gradient Vector ∇f(x): Vector of first-order partial derivatives pointing in direction of steepest ascent.
+- Hessian Matrix H(x): Matrix of second-order partial derivatives H_{ij} = ∂^2 f / (∂x_i ∂x_j).
+- Second-Order Optimality Conditions:
+  * If ∇f(x*) = 0 and H(x*) is Positive Definite (all eigenvalues λ_i > 0), x* is a strict local minimum.
+  * If H(x*) has both positive and negative eigenvalues, x* is a saddle point.

@@ -1,0 +1,89 @@
+================================================================================
+COURSE CS-350: OPERATING SYSTEMS & SYSTEMS PROGRAMMING
+Author: Prof. Andrew Tanenbaum | Systems Architecture Institute
+================================================================================
+
+[PAGE 1] CHAPTER 1: PROCESS LIFECYCLE, CONTEXT SWITCHING & THREADS
+1. Dual-Mode Operation & Hardware Protection:
+- CPU operates in at least two modes: User Mode (restricted privileges) and Kernel / Supervisor Mode (unrestricted execution of privileged instructions).
+- Mode transitions occur via hardware interrupts, CPU traps (exceptions), or explicit System Calls (syscalls).
+- The interrupt vector table (IVT) contains addresses of kernel interrupt service routines (ISRs).
+
+2. Process Control Block (PCB):
+- Represents an execution instance in memory: Process ID (PID), Program Counter (PC), CPU registers, stack pointer, scheduling state (Ready, Running, Blocked/Waiting, Terminated), memory management information, and open file descriptors.
+- Context Switch Cost: Saving current hardware registers into the departing process's PCB, flushing/invalidating TLB (Translation Lookaside Buffer) entries, and loading the next process's state. High hardware overhead without executing useful user-space instructions.
+
+3. Threads and Concurrency:
+- A thread is a basic unit of CPU execution comprising a thread ID, program counter, register set, and private call stack.
+- Multiple threads in the same process share code segment, data segment (global variables), heap, and operating system resources (open files, sockets).
+- Kernel-Level Threads (KLT) vs User-Level Threads (ULT): KLTs are scheduled directly by the OS kernel; ULTs are managed in user-space via a runtime library without kernel awareness, but a blocking system call in one ULT blocks all sibling threads.
+
+[PAGE 2] CHAPTER 2: CPU SCHEDULING ALGORITHMS
+1. Scheduling Metrics:
+- Turnaround Time: Completion Time - Arrival Time.
+- Waiting Time: Turnaround Time - Burst Time.
+- Response Time: Time from submission until first CPU response.
+
+2. Canonical Scheduling Algorithms:
+- First-Come, First-Served (FCFS): Non-preemptive. Suffers from the Convoy Effect where small I/O-bound jobs queue behind a massive CPU-bound process, degrading average waiting time.
+- Shortest Job First (SJF) & Shortest Remaining Time First (SRTF):
+  * Provably optimal minimum average waiting time.
+  * Difficult to implement in practice because future CPU burst lengths cannot be known in advance (estimated using exponential smoothing: τ_{n+1} = α t_n + (1 - α) τ_n).
+  * Can lead to starvation of long-burst processes.
+- Round Robin (RR):
+  * Preemptive scheduling allocating each process a fixed CPU time quantum q.
+  * If quantum q is too large, RR degrades to FCFS. If q is too small, context switch overhead dominates CPU cycles.
+- Multilevel Feedback Queue (MLFQ):
+  * Multiple priority queues with distinct time quanta. CPU-bound jobs drop to lower priority queues with larger quanta, while interactive I/O-bound jobs remain in high-priority queues.
+
+[PAGE 3] CHAPTER 3: PROCESS SYNCHRONIZATION & DEADLOCKS
+1. The Critical-Section Problem:
+- A code segment accessing shared resources where race conditions can occur.
+- Mandatory Criteria for valid synchronization:
+  a) Mutual Exclusion: Only one process inside the critical section at any instant.
+  b) Progress: Selection of the next entering process cannot be postponed indefinitely if the critical section is empty.
+  c) Bounded Waiting: A limit on the number of times other processes can enter before a requesting process is granted entry (prevents starvation).
+
+2. Synchronization Primitives:
+- Mutex Lock: Binary mutual exclusion mechanism with acquire() and release() semantics.
+- Semaphores: Integer variables accessed through atomic wait() (P) and signal() (V) operations. Counting semaphores control access to a finite pool of identical resources.
+- Condition Variables: Paired with mutexes to let threads sleep until a specific state condition evaluates to true.
+
+3. Deadlocks & The Coffman Conditions:
+Deadlock occurs if and only if all four Coffman conditions hold simultaneously:
+1. Mutual Exclusion: At least one non-shareable resource.
+2. Hold and Wait: A process holds resources while requesting new ones.
+3. No Preemption: Resources cannot be forcibly seized; only released voluntarily.
+4. Circular Wait: A closed chain of processes P0 -> P1 -> ... -> Pn -> P0 exists.
+
+Deadlock Avoidance (Banker's Algorithm):
+- Maintained by Edsger Dijkstra. Evaluates resource allocation states against available matrices (Allocation, Max, Available, Need = Max - Allocation).
+- System only transitions if there exists a "safe sequence" where every process can eventually terminate.
+
+[PAGE 4] CHAPTER 4: VIRTUAL MEMORY & PAGE REPLACEMENT
+1. Paging Architecture:
+- Logical address space is partitioned into fixed-size units called Pages.
+- Physical memory is partitioned into matching fixed-size units called Frames.
+- Page Table translates logical page numbers (P) to physical frame numbers (F) offset by displacement (d).
+- Translation Lookaside Buffer (TLB): High-speed associative hardware cache. Effective Memory Access Time (EMAT) = hit_rate * (tlb_lookup + mem_access) + (1 - hit_rate) * (tlb_lookup + 2 * mem_access).
+
+2. Page Faults & Demand Paging:
+- Accessing a page with invalid bit triggers a hardware interrupt trap to the kernel (Page Fault).
+- Kernel locates page on swap disk, allocates free frame, issues disk I/O, updates page table, and resumes the faulting instruction.
+
+3. Page Replacement Algorithms:
+- Belady's Anomaly: Certain replacement algorithms (notably FIFO) incur MORE page faults when physical memory frame count INCREASES.
+- Optimal (OPT / MIN): Replaces page that will not be used for longest future duration. Theoretical benchmark, unimplementable in practice.
+- Least Recently Used (LRU): Replaces page with longest elapsed time since last access. Requires hardware timestamps or double-linked stack tracking.
+- Clock / Second-Chance Algorithm: Practical LRU approximation using a reference bit and circular pointer queue. If reference bit is 1, reset to 0 and advance; if 0, evict frame.
+
+[PAGE 5] CHAPTER 5: FILE SYSTEMS & STORAGE ARCHITECTURE
+1. Inode Architecture:
+- Unix Inode (Index Node) stores file metadata: file mode, owner, size, timestamps, and data block pointers:
+  * 12 Direct pointers pointing directly to disk data blocks.
+  * 1 Single Indirect pointer pointing to a block of pointers.
+  * 1 Double Indirect pointer pointing to indirect blocks.
+  * 1 Triple Indirect pointer enabling multi-terabyte addressability without wasting memory for small files.
+2. Crash Consistency & Journaling:
+- System crashes during metadata updates cause corrupted directory structures.
+- Journaling file systems (ext4, NTFS, ZFS) write transactions to a dedicated circular write-ahead log (journal) prior to flushing blocks to storage, ensuring fast atomic recovery on reboot without running full disk fsck scans.
