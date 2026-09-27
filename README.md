@@ -10,13 +10,12 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Python-3.11%20%7C%203.12-blue?logo=python" alt="Python 3" />
+  <img src="https://img.shields.io/badge/Python-3.11%20%7C%203.12%20%7C%203.14-blue?logo=python" alt="Python 3" />
   <img src="https://img.shields.io/badge/FastAPI-0.115+-009688?logo=fastapi" alt="FastAPI" />
-  <img src="https://img.shields.io/badge/Architecture-Hybrid%20RAG%20%2B%20BM25-indigo" alt="RAG" />
-  <img src="https://img.shields.io/badge/Competency-Bayesian%20Mastery-emerald" alt="Competency Engine" />
-  <img src="https://img.shields.io/badge/Multi--Course-Deep%20Learning%20%7C%20DSA%20%7C%20OS%20%7C%20Math-blue" alt="Multi Course" />
-  <img src="https://img.shields.io/badge/UI-Notion%20%26%20Linear%20Design-slate" alt="UI Design" />
-  <img src="https://img.shields.io/badge/Tests-12%20Passing-brightgreen" alt="Tests Passing" />
+  <img src="https://img.shields.io/badge/Retrieval-BM25%20%2B%20Dense%20RRF-indigo" alt="RAG" />
+  <img src="https://img.shields.io/badge/Streaming-SSE%20Token%20Stream-teal" alt="SSE" />
+  <img src="https://img.shields.io/badge/Audio-NotebookLM%20Podcasts-purple" alt="Podcasts" />
+  <img src="https://img.shields.io/badge/Tests-13%20Passing-brightgreen" alt="Tests Passing" />
   <img src="https://img.shields.io/badge/License-MIT-amber" alt="License MIT" />
 </p>
 
@@ -58,6 +57,10 @@ Built with an authentic **Notion / NotebookLM** human-crafted design system—fr
 
 ## ✨ Key Features
 
+- **📑 Split-Screen PDF Viewer with Interactive Bounding-Box Citations**: Integrated PDF.js split-screen viewer side-by-side with chat. Clicking any citation opens the original document at the exact page, scrolls smoothly to the target excerpt, and pulses an interactive bounding-box highlight overlay (`@keyframes highlight-pulse`). Supports full zoom, target navigation, and non-PDF visual fallbacks.
+- **⚡ Real-Time Token Streaming (Server-Sent Events / SSE)**: Word-by-word streaming responses powered by FastAPI `StreamingResponse` yielding asynchronous Server-Sent Events (`citations`, `token`, `done`) with live glowing cursor typewriter animation.
+- **🎙️ AI Audio Overviews / Deep-Dive Podcasts (NotebookLM Style)**: Conversational podcast studio featuring two alternating AI hosts—**Dr. Alex Rivera** (Lead Explainer) and **Jordan Chen** (Co-Host). Includes active speaker equalizer animations, timeline scrubbing, synchronized dual-speaker transcript highlighting, chapter seeking, on-the-fly episode generation from uploaded notes, and Markdown notes export.
+- **🧠 Hybrid Dense + Sparse Neural Reranking (BM25 + Dense Cosine + RRF)**: Combines Okapi BM25 ($k_1=1.5, b=0.75$) for exact technical terminology and acronyms (CNN, RNN, LSTM, SGD, BPTT) with subword dense cosine vector ranking, fused via Reciprocal Rank Fusion ($RRF(d) = \frac{1}{60 + \text{rank}_{BM25}} + \frac{1}{60 + \text{rank}_{Dense}}$) and cross-encoder phrase alignment scoring.
 - **📚 Multi-Course Academic Support**: Seamlessly switch between and manage multiple subjects:
   - 🧠 *Deep Learning & Neural Networks* (Backprop, CNNs, LSTMs, Transformers)
   - 💻 *Data Structures & Algorithms* (Graph Traversals, Dynamic Programming, Trees)
@@ -154,21 +157,23 @@ Open your browser and navigate to `http://127.0.0.1:8000`.
 ```bash
 python test_platform.py
 ```
-*(All 12 automated unit and integration tests will execute and verify system health.)*
+*(All 13 automated unit and integration tests will execute and verify system health.)*
 
 ---
 
 ## 🔌 API Endpoints Reference
 
-The backend provides **18 modular REST API endpoints**:
+The backend provides **23 modular REST & SSE API endpoints**:
 
 | Method | Endpoint | Description |
 | :---: | :--- | :--- |
 | `GET` | `/api/status` | System health, indexed files count, and chunk stats |
 | `GET` | `/api/documents` | Pre-loaded and uploaded materials library |
+| `GET` | `/api/documents/{doc_id}/file` | Raw PDF / document byte streaming with Range requests for PDF.js |
 | `GET` | `/api/documents/{doc_id}/chunks` | Inspect raw parsed chunks with page/slide metadata |
 | `POST` | `/api/upload` | Upload new PDF, PPTX, DOCX, or TXT documents |
-| `POST` | `/api/tutor/chat` | RAG Q&A grounded with exact citations |
+| `POST` | `/api/tutor/chat` | RAG Q&A grounded with exact citations and Hybrid RRF scores |
+| `POST` | `/api/tutor/chat/stream` | Word-by-word real-time token streaming via Server-Sent Events (SSE) |
 | `POST` | `/api/tutor/doubt-solver` | 3-Level Progressive Doubt Explainer (Analogy, Math, Code) |
 | `GET` | `/api/quiz/generate` | Adaptive multi-tier quiz generation |
 | `POST` | `/api/quiz/evaluate-mcq` | MCQ scoring with adaptive difficulty adjustment & XP |
@@ -182,6 +187,9 @@ The backend provides **18 modular REST API endpoints**:
 | `GET` | `/api/graph` | Concept Knowledge Graph with live competency overlay |
 | `POST` | `/api/viva/start` | Start Socratic oral viva session with Prof. Turing |
 | `POST` | `/api/viva/respond` | Submit oral defense transcript for rubric evaluation |
+| `GET` | `/api/podcasts` | List library of multi-turn conversational AI audio overviews |
+| `GET` | `/api/podcasts/{id}` | Retrieve podcast episode script, chapters, and audio metadata |
+| `POST` | `/api/podcast/generate` | Synthesize custom dual-host podcast episode from course notes |
 
 ---
 
@@ -201,6 +209,7 @@ CogniTutor-AI-Learning-Platform/
 │   ├── roadmap_engine.py      # Dynamic roadmap with remediation checkpoints
 │   ├── knowledge_graph.py     # Directed ontology graph & competency mapper
 │   ├── viva_engine.py         # Socratic viva oral examination engine
+│   ├── podcast_engine.py      # Dual-host AI podcast audio overview generator
 │   ├── gamification.py        # XP, levels, badges, streaks, & leaderboard
 │   ├── create_samples.py      # Preloaded course materials generator
 │   └── main.py                # FastAPI application & route controllers
