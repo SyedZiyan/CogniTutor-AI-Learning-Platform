@@ -493,9 +493,13 @@ function formatCitationsHtml(citations) {
   return `
     <div class="mt-3.5 pt-3 border-t border-slate-100">
       <div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center justify-between">
-        <div class="flex items-center gap-1.5">
+        <div class="flex items-center gap-1.5 flex-wrap">
           <i data-lucide="book-open" class="w-3.5 h-3.5 text-blue-600"></i>
           <span>Cited Sources (Click to View in Split Screen)</span>
+          <span class="text-[9px] font-mono font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded border border-indigo-200 flex items-center gap-1">
+            <i data-lucide="layers" class="w-2.5 h-2.5"></i>
+            BM25 + Dense RRF
+          </span>
         </div>
         <span class="text-[10px] text-blue-600 font-mono flex items-center gap-1 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200">
           <i data-lucide="split" class="w-2.5 h-2.5"></i>
@@ -510,6 +514,8 @@ function formatCitationsHtml(citations) {
           const icon = ext === '.pdf' ? 'file-text' : (ext === '.pptx' ? 'presentation' : (ext === '.docx' ? 'file' : 'file-code'));
           const isPdf = ext === '.pdf' || (c.doc_name && c.doc_name.toLowerCase().endsWith('.pdf'));
           const badgeType = isPdf ? 'PDF' : (ext.replace('.', '').toUpperCase() || 'DOC');
+          const meta = c.retrieval_meta || {};
+          const rankInfo = meta.sparse_rank ? `BM25 #${meta.sparse_rank} • Dense #${meta.dense_rank}` : `Relevance ${c.relevance || 85}%`;
           return `
             <div onclick="handleCitationClick('${citeKey}')" class="citation-interactive-pill p-2.5 rounded-lg bg-slate-50 hover:bg-blue-50/60 border border-slate-200 hover:border-blue-500 text-xs max-w-sm transition shadow-2xs group cursor-pointer" title="Click to view source in split PDF viewer">
               <div class="flex items-center justify-between font-semibold text-slate-800 gap-2 mb-1">
@@ -526,6 +532,10 @@ function formatCitationsHtml(citations) {
                 </div>
               </div>
               <p class="text-[11px] text-slate-500 line-clamp-2">${escapeHtml(c.snippet)}</p>
+              <div class="mt-1.5 pt-1 border-t border-slate-100 flex items-center justify-between text-[10px] font-mono text-slate-400">
+                <span class="text-indigo-600 font-medium">${rankInfo}</span>
+                <span class="text-slate-400">${c.section ? escapeHtml(c.section.substring(0, 20)) : ''}</span>
+              </div>
             </div>
           `;
         }).join('')}

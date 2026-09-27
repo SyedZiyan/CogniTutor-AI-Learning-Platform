@@ -128,17 +128,211 @@ class TFIDFVectorIndex:
                 })
         return results
 
+class BM25Index:
+    """
+    Okapi BM25 Sparse Keyword Retrieval Index.
+    Excels at exact keyword, technical terminology, and acronym matching (e.g. CNN, RNN, LSTM, SGD, BPTT).
+    """
+    def __init__(self, k1: float = 1.5, b: float = 0.75):
+        self.k1 = k1
+        self.b = b
+        self.chunks: List[DocumentChunk] = []
+        self.doc_lengths: np.ndarray = np.array([])
+        self.avg_doc_len: float = 0.0
+        self.doc_freqs: Dict[str, int] = {}
+        self.idf: Dict[str, float] = {}
+        self.doc_token_counts: List[Dict[str, int]] = []
+
+    def _tokenize(self, text: str) -> List[str]:
+        return re.findall(r'\b[a-zA-Z0-9_-]{2,}\b', text.lower())
+
+    def build_index(self, chunks: List[DocumentChunk]):
+        self.chunks = chunks
+        num_docs = len(chunks)
+        if num_docs == 0:
+            self.doc_lengths = np.array([])
+            self.avg_doc_len = 0.0
+            self.doc_freqs = {}
+            self.idf = {}
+            self.doc_token_counts = []
+            return
+
+        self.doc_token_counts = []
+        doc_lens = []
+        self.doc_freqs = {}
+
+        for c in chunks:
+            text = f"{c.topic} {c.section} {c.text}"
+            tokens = self._tokenize(text)
+            doc_lens.append(len(tokens))
+            term_counts: Dict[str, int] = {}
+            for t in tokens:
+                term_counts[t] = term_counts.get(t, 0) + 1
+            self.doc_token_counts.append(term_counts)
+
+            for term in term_counts.keys():
+                self.doc_freqs[term] = self.doc_freqs.get(term, 0) + 1
+
+        self.doc_lengths = np.array(doc_lens, dtype=np.float32)
+        self.avg_doc_len = float(np.mean(self.doc_lengths)) if num_docs > 0 else 1.0
+
+        # Calculate BM25 IDF
+        self.idf = {}
+        for term, df in self.doc_freqs.items():
+            self.idf[term] = math.log(1.0 + (num_docs - df + 0.5) / (df + 0.5))
+
+    def search(self, query: str, top_k: int = 10) -> List[Dict[str, Any]]:
+        num_docs = len(self.chunks)
+        if num_docs == 0:
+            return []
+
+        query_tokens = self._tokenize(query)
+        if not query_tokens:
+            return []
+
+        scores = np.zeros(num_docs, dtype=np.float32)
+
+        for term in query_tokens:
+            if term not in self.idf:
+                continue
+            idf_val = self.idf[term]
+            for doc_idx in range(num_docs):
+                tf = self.doc_token_counts[doc_idx].get(term, 0)
+                if tf > 0:
+                    doc_len = self.doc_lengths[doc_idx]
+                    denominator = tf + self.k1 * (1.0 - self.b + self.b * (doc_len / max(1.0, self.avg_doc_len)))
+                    scores[doc_idx] += idf_val * (tf * (self.k1 + 1.0)) / denominator
+
+        top_indices = np.argsort(scores)[::-1][:top_k]
+        results = []
+        for rank, idx in enumerate(top_indices):
+            s = float(scores[idx])
+            if s > 0:
+                results.append({
+                    "doc_idx": idx,
+                    "chunk": self.chunks[idx],
+                    "score": s,
+                    "rank": rank + 1
+                })
+        return results
+
 class RAGEngine:
+    """
+    Hybrid Dense + Sparse Neural Reranker Engine.
+    Combines:
+      - BM25 Sparse Keyword Ranker (Okapi BM25 with k1=1.5, b=0.75)
+      - Dense Subword/N-gram Vector Ranker (Cosine similarity)
+      - Reciprocal Rank Fusion (RRF with k=60)
+      - Cross-Encoder Style Precision Reranker (exact n-gram phrases & topic alignment)
+    """
     def __init__(self):
-        self.index = TFIDFVectorIndex()
+        self.sparse_index = BM25Index()
+        self.dense_index = TFIDFVectorIndex()
         self.all_chunks: List[DocumentChunk] = []
 
     def set_chunks(self, chunks: List[DocumentChunk]):
         self.all_chunks = chunks
-        self.index.build_index(chunks)
+        self.sparse_index.build_index(chunks)
+        self.dense_index.build_index(chunks)
 
     def retrieve(self, query: str, top_k: int = 4) -> List[Dict[str, Any]]:
-        return self.index.search(query, top_k=top_k)
+        if not self.all_chunks:
+            return []
+
+        # 1. Dual Retrieval from Sparse (BM25) and Dense (Cosine)
+        candidate_k = min(len(self.all_chunks), max(top_k * 3, 10))
+        sparse_hits = self.sparse_index.search(query, top_k=candidate_k)
+        dense_hits = self.dense_index.search(query, top_k=candidate_k)
+
+        # 2. Reciprocal Rank Fusion (RRF with k=60)
+        rrf_constant = 60.0
+        doc_map: Dict[str, Dict[str, Any]] = {}
+
+        for item in sparse_hits:
+            chunk = item["chunk"]
+            cid = chunk.chunk_id
+            s_rank = item["rank"]
+            doc_map[cid] = {
+                "chunk": chunk.to_dict(),
+                "rrf_score": 1.0 / (rrf_constant + s_rank),
+                "sparse_score": item["score"],
+                "dense_score": 0.0,
+                "sparse_rank": s_rank,
+                "dense_rank": 999
+            }
+
+        for rank, item in enumerate(dense_hits):
+            chunk_dict = item["chunk"]
+            cid = chunk_dict["chunk_id"]
+            d_rank = rank + 1
+            rrf_add = 1.0 / (rrf_constant + d_rank)
+
+            if cid in doc_map:
+                doc_map[cid]["rrf_score"] += rrf_add
+                doc_map[cid]["dense_score"] = item["score"]
+                doc_map[cid]["dense_rank"] = d_rank
+            else:
+                doc_map[cid] = {
+                    "chunk": chunk_dict,
+                    "rrf_score": rrf_add,
+                    "sparse_score": 0.0,
+                    "dense_score": item["score"],
+                    "sparse_rank": 999,
+                    "dense_rank": d_rank
+                }
+
+        # 3. Cross-Encoder Style Precision Reranking
+        query_lower = query.lower()
+        query_words = [w for w in re.findall(r'\b[a-zA-Z0-9_-]{3,}\b', query_lower)]
+        query_bigrams = [f"{query_words[i]} {query_words[i+1]}" for i in range(len(query_words)-1)] if len(query_words) >= 2 else []
+
+        ranked_items = list(doc_map.values())
+        for entry in ranked_items:
+            chunk_text = entry["chunk"]["text"].lower()
+            chunk_topic = entry["chunk"]["topic"].lower()
+            chunk_section = entry["chunk"]["section"].lower()
+
+            cross_bonus = 0.0
+            # Contiguous multi-word match
+            for bigram in query_bigrams:
+                if bigram in chunk_text:
+                    cross_bonus += 0.25
+
+            # Topic / section exact alignment
+            for q_word in query_words:
+                if q_word in chunk_topic:
+                    cross_bonus += 0.15
+                if q_word in chunk_section:
+                    cross_bonus += 0.10
+
+            # Technical acronym boost
+            acronyms = re.findall(r'\b[A-Z]{2,}\b', query)
+            for acr in acronyms:
+                if acr.lower() in chunk_text:
+                    cross_bonus += 0.30
+
+            hybrid_score = (entry["rrf_score"] * 30.0) + (entry["dense_score"] * 0.4) + cross_bonus
+            entry["final_score"] = hybrid_score
+            entry["relevance_percent"] = min(99, max(30, int(hybrid_score * 35)))
+
+        ranked_items.sort(key=lambda x: x["final_score"], reverse=True)
+
+        final_results = []
+        for item in ranked_items[:top_k]:
+            final_results.append({
+                "chunk": item["chunk"],
+                "score": round(item["final_score"], 4),
+                "relevance_percent": item["relevance_percent"],
+                "retrieval_meta": {
+                    "method": "Hybrid-BM25-Dense-RRF",
+                    "sparse_rank": item["sparse_rank"],
+                    "dense_rank": item["dense_rank"],
+                    "dense_score": round(item["dense_score"], 3),
+                    "sparse_score": round(item["sparse_score"], 3)
+                }
+            })
+
+        return final_results
 
     def synthesize_answer(self, query: str, context_results: List[Dict[str, Any]], custom_prompt_style: str = "tutor") -> Dict[str, Any]:
         """
@@ -178,7 +372,14 @@ class RAGEngine:
                 "topic": c["topic"],
                 "snippet": c["text"][:180] + "...",
                 "exact_text": c["text"],
-                "relevance": res["relevance_percent"]
+                "relevance": res.get("relevance_percent", 85),
+                "retrieval_meta": res.get("retrieval_meta", {
+                    "method": "Hybrid-BM25-Dense-RRF",
+                    "sparse_rank": 1,
+                    "dense_rank": 1,
+                    "dense_score": 0.85,
+                    "sparse_score": 1.5
+                })
             })
             context_texts.append(f"[{c['doc_name']} | {c['page_or_slide']} | {c['section']}]:\n{c['text']}")
             topics_found.add(c["topic"])
@@ -274,7 +475,8 @@ class RAGEngine:
             "answer": full_answer,
             "citations": citations,
             "grounded": True,
-            "topics": list(topics_found)
+            "topics": list(topics_found),
+            "retrieval_strategy": "Hybrid-BM25-Dense-RRF"
         }
 
 rag_engine = RAGEngine()

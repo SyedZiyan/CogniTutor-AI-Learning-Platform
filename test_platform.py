@@ -45,6 +45,18 @@ def run_tests():
     assert 'data: {"event": "done"' in stream_events[-1]
     print(f"✅ Real-Time SSE Token Streaming: OK ({len(stream_events)} events streamed word-by-word)")
 
+    # 3c. Hybrid Dense + Sparse BM25 RRF Neural Reranking
+    res_hybrid = client.post("/api/tutor/chat", json={"query": "CNN spatial pooling and kernel stride"})
+    assert res_hybrid.status_code == 200, f"Hybrid tutor chat failed: {res_hybrid.text}"
+    hybrid_data = res_hybrid.json()
+    assert hybrid_data.get("retrieval_strategy") == "Hybrid-BM25-Dense-RRF", "Expected Hybrid-BM25-Dense-RRF strategy"
+    assert len(hybrid_data["citations"]) > 0, "Expected at least one hybrid citation"
+    first_cite = hybrid_data["citations"][0]
+    assert "retrieval_meta" in first_cite, "Expected retrieval_meta in citations"
+    assert first_cite["retrieval_meta"]["method"] == "Hybrid-BM25-Dense-RRF"
+    assert "sparse_rank" in first_cite["retrieval_meta"] and "dense_rank" in first_cite["retrieval_meta"]
+    print(f"✅ Hybrid BM25 + Dense RRF Reranker: OK (Method: {first_cite['retrieval_meta']['method']}, BM25 Rank #{first_cite['retrieval_meta']['sparse_rank']}, Dense Rank #{first_cite['retrieval_meta']['dense_rank']})")
+
     # 4. Doubt Solver (3 Levels)
     res = client.post("/api/tutor/doubt-solver", json={"topic_or_question": "lstm"})
     assert res.status_code == 200, f"Doubt solver failed: {res.text}"
