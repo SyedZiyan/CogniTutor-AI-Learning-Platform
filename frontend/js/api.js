@@ -17,6 +17,10 @@ const api = {
     return res.json();
   },
 
+  getDocumentFileUrl(docId) {
+    return `${API_BASE}/api/documents/${encodeURIComponent(docId)}/file`;
+  },
+
   async uploadDocument(file) {
     const formData = new FormData();
     formData.append("file", file);

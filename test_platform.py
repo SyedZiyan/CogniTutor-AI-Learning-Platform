@@ -21,6 +21,13 @@ def run_tests():
     docs_data = res.json()
     print(f"✅ Documents Endpoint: OK ({len(docs_data['documents'])} sample materials ready)")
 
+    # 2b. Document Raw File Download (PDF.js Streaming)
+    sample_doc_id = docs_data['documents'][0]['doc_id']
+    res_file = client.get(f"/api/documents/{sample_doc_id}/file")
+    assert res_file.status_code == 200, f"File retrieval failed: {res_file.status_code}"
+    assert len(res_file.content) > 100
+    print(f"✅ Document File Streaming Endpoint: OK ({len(res_file.content)} bytes, {res_file.headers.get('content-type')})")
+
     # 3. Tutor Chat (RAG)
     res = client.post("/api/tutor/chat", json={"query": "Explain backpropagation in simple words."})
     assert res.status_code == 200, f"Tutor chat failed: {res.text}"

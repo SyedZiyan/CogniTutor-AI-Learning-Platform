@@ -7,9 +7,9 @@
     "file_size_kb": 3.3,
     "chunk_count": 5,
     "topics": [
-      "Deep Learning Fundamentals",
+      "Convolutional Neural Networks (CNN)",
       "Neural Networks",
-      "Convolutional Neural Networks (CNN)"
+      "Deep Learning Fundamentals"
     ],
     "is_sample": true
   },
@@ -22,9 +22,9 @@
     "chunk_count": 7,
     "topics": [
       "Backpropagation & Optimization",
-      "Overfitting & Regularization",
+      "Forward & Loss Functions",
       "Neural Networks",
-      "Forward & Loss Functions"
+      "Overfitting & Regularization"
     ],
     "is_sample": true
   },
@@ -36,9 +36,9 @@
     "file_size_kb": 4.6,
     "chunk_count": 10,
     "topics": [
+      "Recurrent Neural Networks (RNN)",
       "Attention & Transformers",
-      "Deep Learning Fundamentals",
-      "Recurrent Neural Networks (RNN)"
+      "Deep Learning Fundamentals"
     ],
     "is_sample": true
   },
@@ -50,8 +50,8 @@
     "file_size_kb": 5.0,
     "chunk_count": 10,
     "topics": [
-      "Deep Learning Fundamentals",
-      "Vanishing Gradient Problem"
+      "Vanishing Gradient Problem",
+      "Deep Learning Fundamentals"
     ],
     "is_sample": true
   },
@@ -63,8 +63,8 @@
     "file_size_kb": 6.9,
     "chunk_count": 14,
     "topics": [
-      "Deep Learning Fundamentals",
-      "Convolutional Neural Networks (CNN)"
+      "Convolutional Neural Networks (CNN)",
+      "Deep Learning Fundamentals"
     ],
     "is_sample": true
   },
@@ -77,8 +77,8 @@
     "chunk_count": 6,
     "topics": [
       "Long Short-Term Memory (LSTM)",
-      "Recurrent Neural Networks (RNN)",
       "Gated Recurrent Units (GRU)",
+      "Recurrent Neural Networks (RNN)",
       "Vanishing Gradient Problem"
     ],
     "is_sample": true
@@ -91,8 +91,8 @@
     "file_size_kb": 30.9,
     "chunk_count": 4,
     "topics": [
-      "Attention & Transformers",
-      "Recurrent Neural Networks (RNN)"
+      "Recurrent Neural Networks (RNN)",
+      "Attention & Transformers"
     ],
     "is_sample": true
   },

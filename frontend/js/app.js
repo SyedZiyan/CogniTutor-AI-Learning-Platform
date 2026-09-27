@@ -56,6 +56,17 @@ function playMistakeSound() {
   }
 }
 
+// HTML Escaper for Safe Rendering
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // Floating Frosted Glass Toast Notification System
 function showToast(message, type = 'info') {
   let container = document.getElementById('cogni-toast-container');
@@ -405,8 +416,11 @@ async function loadDocumentLibrary() {
           <div class="flex items-center justify-between pt-3 mt-3 border-t border-slate-100">
             <span class="text-xs font-semibold text-blue-600 font-mono">${doc.chunk_count} Chunks</span>
             <div class="flex items-center gap-2">
+              <button onclick="openDocumentViewer('${doc.doc_id}', '${doc.file_name}', 1, '', '', '.${(doc.file_type || '').toLowerCase()}')" class="px-2.5 py-1 text-xs rounded bg-slate-100 hover:bg-slate-200 text-slate-700 transition" title="Read in Split PDF Viewer">
+                View
+              </button>
               <button onclick="viewDocumentChunks('${doc.doc_id}', '${doc.file_name}')" class="px-2.5 py-1 text-xs rounded bg-slate-100 hover:bg-slate-200 text-slate-700 transition">
-                Inspect
+                Chunks
               </button>
               <button onclick="askAboutDocument('${doc.file_name}')" class="px-2.5 py-1 text-xs rounded bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium transition">
                 Ask Notes
@@ -441,15 +455,25 @@ async function viewDocumentChunks(docId, docName) {
     if (!modal || !contentEl) return;
 
     titleEl.innerText = `${docName} (${data.total_chunks} Chunks)`;
-    contentEl.innerHTML = data.chunks.map(c => `
-      <div class="p-3 rounded-lg bg-slate-50 border border-slate-200 text-xs">
-        <div class="flex items-center justify-between mb-1">
-          <span class="font-bold text-blue-600 font-mono">${c.page_or_slide}</span>
-          <span class="text-[10px] px-1.5 py-0.5 rounded bg-white border border-slate-200 text-slate-600">${c.topic}</span>
+    contentEl.innerHTML = data.chunks.map(c => {
+      const pageNum = parseInt(c.page_or_slide.replace(/\D/g, '')) || 1;
+      return `
+        <div class="p-3 rounded-lg bg-slate-50 border border-slate-200 text-xs">
+          <div class="flex items-center justify-between mb-1">
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-blue-600 font-mono">${c.page_or_slide}</span>
+              <span class="text-[10px] px-1.5 py-0.5 rounded bg-white border border-slate-200 text-slate-600">${c.topic}</span>
+            </div>
+            <button onclick="closeChunksModal(); openDocumentViewer('${docId}', '${docName}', ${pageNum}, '', '${escapeHtml(c.text).replace(/'/g, "\\'")}')" class="text-[11px] text-blue-600 hover:underline font-semibold flex items-center gap-1">
+              <span>Open in Viewer</span>
+              <i data-lucide="arrow-right" class="w-3 h-3"></i>
+            </button>
+          </div>
+          <p class="text-slate-700 leading-relaxed font-mono whitespace-pre-wrap">${escapeHtml(c.text)}</p>
         </div>
-        <p class="text-slate-700 leading-relaxed font-mono whitespace-pre-wrap">${c.text}</p>
-      </div>
-    `).join('');
+      `;
+    }).join('');
+    lucide.createIcons();
 
     modal.classList.remove('hidden');
   } catch (err) {
@@ -519,22 +543,46 @@ function appendChatMessage(sender, text, citations = []) {
 
   let citationsHtml = '';
   if (citations && citations.length > 0) {
+    window.activeCitationsMap = window.activeCitationsMap || {};
     citationsHtml = `
       <div class="mt-3.5 pt-3 border-t border-slate-100">
-        <div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-          <i data-lucide="book-open" class="w-3.5 h-3.5 text-blue-600"></i>
-          <span>Cited Sources in Notes</span>
+        <div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center justify-between">
+          <div class="flex items-center gap-1.5">
+            <i data-lucide="book-open" class="w-3.5 h-3.5 text-blue-600"></i>
+            <span>Cited Sources (Click to View in Split Screen)</span>
+          </div>
+          <span class="text-[10px] text-blue-600 font-mono flex items-center gap-1 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200">
+            <i data-lucide="split" class="w-2.5 h-2.5"></i>
+            Split Viewer
+          </span>
         </div>
         <div class="flex flex-wrap gap-2">
-          ${citations.map(c => `
-            <div class="p-2 rounded-lg bg-slate-50 border border-slate-200 text-xs max-w-sm">
-              <div class="flex items-center justify-between font-semibold text-slate-800">
-                <span class="truncate max-w-[150px]">${c.doc_name}</span>
-                <span class="text-blue-600 font-mono text-[11px]">${c.page_or_slide}</span>
+          ${citations.map(c => {
+            const citeKey = `cite_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+            window.activeCitationsMap[citeKey] = c;
+            const ext = (c.file_type || '').toLowerCase();
+            const icon = ext === '.pdf' ? 'file-text' : (ext === '.pptx' ? 'presentation' : (ext === '.docx' ? 'file' : 'file-code'));
+            const isPdf = ext === '.pdf' || (c.doc_name && c.doc_name.toLowerCase().endsWith('.pdf'));
+            const badgeType = isPdf ? 'PDF' : (ext.replace('.', '').toUpperCase() || 'DOC');
+            return `
+              <div onclick="handleCitationClick('${citeKey}')" class="citation-interactive-pill p-2.5 rounded-lg bg-slate-50 hover:bg-blue-50/60 border border-slate-200 hover:border-blue-500 text-xs max-w-sm transition shadow-2xs group cursor-pointer" title="Click to view source in split PDF viewer">
+                <div class="flex items-center justify-between font-semibold text-slate-800 gap-2 mb-1">
+                  <span class="truncate max-w-[150px] flex items-center gap-1.5 group-hover:text-blue-600">
+                    <i data-lucide="${icon}" class="w-3.5 h-3.5 text-blue-600 shrink-0"></i>
+                    <span class="truncate">${escapeHtml(c.doc_name)}</span>
+                  </span>
+                  <div class="flex items-center gap-1 shrink-0">
+                    <span class="text-[9px] uppercase font-mono font-bold px-1 py-0.2 rounded bg-slate-200 text-slate-700">${badgeType}</span>
+                    <span class="text-blue-700 font-mono text-[10px] font-bold bg-blue-100/80 px-1.5 py-0.5 rounded border border-blue-300 flex items-center gap-1">
+                      <i data-lucide="eye" class="w-2.5 h-2.5"></i>
+                      ${escapeHtml(c.page_or_slide)}
+                    </span>
+                  </div>
+                </div>
+                <p class="text-[11px] text-slate-500 line-clamp-2">${escapeHtml(c.snippet)}</p>
               </div>
-              <p class="text-[11px] text-slate-500 mt-1 line-clamp-2">${c.snippet}</p>
-            </div>
-          `).join('')}
+            `;
+          }).join('')}
         </div>
       </div>
     `;
@@ -636,6 +684,392 @@ function setupVoice() {
   }
 
   window.addEventListener('beforeunload', () => voiceTutor.stopSpeaking());
+}
+
+// ==========================================================================
+// 4b. Split-Screen PDF.js Viewer & Grounded Bounding-Box Citations
+// ==========================================================================
+
+const pdfViewerState = {
+  isOpen: false,
+  docId: null,
+  docName: null,
+  currentLoadedDocId: null,
+  pdfDoc: null,
+  currentPage: 1,
+  totalPages: 1,
+  zoomScale: 1.0,
+  exactText: '',
+  snippet: '',
+  renderTask: null
+};
+
+function handleCitationClick(citationKey) {
+  if (!window.activeCitationsMap || !window.activeCitationsMap[citationKey]) return;
+  const c = window.activeCitationsMap[citationKey];
+  openDocumentViewer(
+    c.doc_id,
+    c.doc_name,
+    c.page_number || 1,
+    c.snippet || '',
+    c.exact_text || c.snippet || '',
+    c.file_type || ''
+  );
+}
+
+async function openDocumentViewer(docId, docName, pageNumber = 1, snippet = '', exactText = '', fileType = '') {
+  if (appState.activeTab !== 'tutor') {
+    switchTab('tutor');
+  }
+
+  // Smooth split-screen layout transition
+  const sourcesCol = document.getElementById('tutor-sources-col');
+  const chatCol = document.getElementById('tutor-chat-col');
+  const viewerCol = document.getElementById('tutor-pdf-viewer-col');
+
+  if (sourcesCol) {
+    sourcesCol.classList.add('hidden');
+    sourcesCol.classList.remove('lg:flex');
+  }
+  if (chatCol) {
+    chatCol.classList.remove('lg:col-span-8');
+    chatCol.classList.add('lg:col-span-5');
+  }
+  if (viewerCol) {
+    viewerCol.classList.remove('hidden');
+    viewerCol.classList.add('flex');
+  }
+
+  pdfViewerState.isOpen = true;
+  pdfViewerState.docId = docId;
+  pdfViewerState.docName = docName;
+  pdfViewerState.currentPage = pageNumber;
+  pdfViewerState.snippet = snippet;
+  pdfViewerState.exactText = exactText;
+
+  const isPdf = docName.toLowerCase().endsWith('.pdf') || (fileType && fileType.toLowerCase() === '.pdf');
+  const docTitleEl = document.getElementById('pdf-viewer-doc-title');
+  const docBadgeEl = document.getElementById('pdf-viewer-badge');
+  const docSubtitleEl = document.getElementById('pdf-viewer-subtitle');
+  const iconBadgeEl = document.getElementById('pdf-doc-icon-badge');
+  const snippetTextEl = document.getElementById('pdf-citation-snippet-text');
+  const pageTagEl = document.getElementById('pdf-citation-page-tag');
+
+  if (docTitleEl) docTitleEl.innerText = docName;
+  if (docBadgeEl) docBadgeEl.innerText = isPdf ? 'PDF' : (fileType.replace('.', '').toUpperCase() || 'DOC');
+  if (docSubtitleEl) docSubtitleEl.innerText = `Grounded Evidence • Page/Slide ${pageNumber}`;
+  if (snippetTextEl) snippetTextEl.innerText = snippet ? `"${snippet}"` : 'Citation active';
+  if (pageTagEl) pageTagEl.innerText = `Page ${pageNumber}`;
+
+  if (iconBadgeEl) {
+    const ext = fileType ? fileType.toLowerCase() : (docName.includes('.') ? docName.split('.').pop().toLowerCase() : '');
+    const iconName = isPdf ? 'file-text' : (ext.includes('ppt') ? 'presentation' : (ext.includes('doc') ? 'file' : 'file-code'));
+    iconBadgeEl.innerHTML = `<i data-lucide="${iconName}" class="w-4 h-4"></i>`;
+  }
+
+  try {
+    lucide.createIcons();
+  } catch (e) {}
+
+  if (isPdf) {
+    await loadAndDisplayPdf(docId, docName, pageNumber, exactText || snippet);
+  } else {
+    renderNonPdfDocument(docName, `Section / Page ${pageNumber}`, snippet, exactText, fileType);
+  }
+}
+
+async function loadAndDisplayPdf(docId, docName, pageNumber, highlightText) {
+  const pageWrapper = document.getElementById('pdf-page-wrapper');
+  const nonPdfViewer = document.getElementById('non-pdf-viewer');
+  const navControls = document.getElementById('pdf-nav-controls');
+  const zoomControls = document.getElementById('pdf-zoom-controls');
+  const jumpBtn = document.getElementById('pdf-highlight-jump-btn');
+  const spinner = document.getElementById('pdf-loading-spinner');
+
+  if (nonPdfViewer) nonPdfViewer.classList.add('hidden');
+  if (pageWrapper) pageWrapper.classList.remove('hidden');
+  if (navControls) navControls.classList.remove('hidden');
+  if (zoomControls) zoomControls.classList.remove('hidden');
+  if (jumpBtn) jumpBtn.classList.remove('hidden');
+
+  if (spinner) spinner.classList.remove('hidden');
+
+  try {
+    if (typeof pdfjsLib === 'undefined') {
+      throw new Error("PDF.js library is not available. Check your internet connection.");
+    }
+
+    if (!pdfViewerState.pdfDoc || pdfViewerState.currentLoadedDocId !== docId) {
+      const fileUrl = api.getDocumentFileUrl(docId);
+      const loadingTask = pdfjsLib.getDocument({
+        url: fileUrl,
+        cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/',
+        cMapPacked: true
+      });
+      pdfViewerState.pdfDoc = await loadingTask.promise;
+      pdfViewerState.currentLoadedDocId = docId;
+      pdfViewerState.totalPages = pdfViewerState.pdfDoc.numPages;
+    }
+
+    await renderPdfPage(pageNumber, highlightText);
+  } catch (err) {
+    console.error("PDF loading error:", err);
+    if (spinner) spinner.classList.add('hidden');
+    renderNonPdfDocument(docName, `Page ${pageNumber}`, pdfViewerState.snippet, pdfViewerState.exactText, '.pdf');
+    showToast("PDF preview fallback: Displaying grounded text excerpt", "info");
+  }
+}
+
+async function renderPdfPage(pageNumber, highlightText) {
+  if (!pdfViewerState.pdfDoc) return;
+
+  const validPageNum = Math.max(1, Math.min(pageNumber, pdfViewerState.totalPages));
+  pdfViewerState.currentPage = validPageNum;
+
+  if (pdfViewerState.renderTask) {
+    try {
+      pdfViewerState.renderTask.cancel();
+    } catch (e) {}
+    pdfViewerState.renderTask = null;
+  }
+
+  const pageIndicator = document.getElementById('pdf-page-indicator');
+  const prevBtn = document.getElementById('pdf-prev-btn');
+  const nextBtn = document.getElementById('pdf-next-btn');
+
+  if (pageIndicator) pageIndicator.innerText = `Page ${validPageNum} / ${pdfViewerState.totalPages}`;
+  if (prevBtn) prevBtn.disabled = validPageNum <= 1;
+  if (nextBtn) nextBtn.disabled = validPageNum >= pdfViewerState.totalPages;
+
+  const spinner = document.getElementById('pdf-loading-spinner');
+  if (spinner) spinner.classList.remove('hidden');
+
+  try {
+    const page = await pdfViewerState.pdfDoc.getPage(validPageNum);
+
+    const container = document.getElementById('pdf-viewer-body');
+    const containerWidth = container ? Math.max(container.clientWidth - 48, 380) : 550;
+    const unscaledViewport = page.getViewport({ scale: 1.0 });
+    const fitScale = containerWidth / unscaledViewport.width;
+    const effectiveScale = fitScale * pdfViewerState.zoomScale;
+
+    const viewport = page.getViewport({ scale: effectiveScale });
+
+    const canvas = document.getElementById('pdf-canvas');
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+
+    canvas.width = Math.floor(viewport.width * dpr);
+    canvas.height = Math.floor(viewport.height * dpr);
+    canvas.style.width = Math.floor(viewport.width) + 'px';
+    canvas.style.height = Math.floor(viewport.height) + 'px';
+
+    const wrapper = document.getElementById('pdf-page-wrapper');
+    wrapper.style.width = Math.floor(viewport.width) + 'px';
+    wrapper.style.height = Math.floor(viewport.height) + 'px';
+
+    const renderContext = {
+      canvasContext: ctx,
+      viewport: viewport,
+      transform: dpr !== 1 ? [dpr, 0, 0, dpr, 0, 0] : null
+    };
+
+    pdfViewerState.renderTask = page.render(renderContext);
+    await pdfViewerState.renderTask.promise;
+    pdfViewerState.renderTask = null;
+
+    await renderBoundingBoxOverlay(page, viewport, highlightText, effectiveScale);
+  } catch (err) {
+    if (err && err.name !== 'RenderingCancelledException') {
+      console.error("renderPdfPage error:", err);
+    }
+  } finally {
+    if (spinner) spinner.classList.add('hidden');
+  }
+}
+
+async function renderBoundingBoxOverlay(page, viewport, highlightText, effectiveScale) {
+  const textLayer = document.getElementById('pdf-text-layer');
+  if (!textLayer) return;
+  textLayer.innerHTML = '';
+  textLayer.style.width = Math.floor(viewport.width) + 'px';
+  textLayer.style.height = Math.floor(viewport.height) + 'px';
+
+  if (!highlightText || !highlightText.trim()) return;
+
+  try {
+    const textContent = await page.getTextContent();
+    const cleanTarget = highlightText.toLowerCase().replace(/[^a-z0-9 ]/g, ' ');
+    const targetWords = cleanTarget.split(/\s+/).filter(w => w.length > 2);
+
+    let boxesCreated = 0;
+    let firstBox = null;
+
+    for (let i = 0; i < textContent.items.length; i++) {
+      const item = textContent.items[i];
+      const itemStr = (item.str || '').trim();
+      if (!itemStr) continue;
+
+      const cleanItem = itemStr.toLowerCase().replace(/[^a-z0-9 ]/g, ' ');
+      const itemWords = cleanItem.split(/\s+/).filter(w => w.length > 2);
+
+      let match = false;
+      if (cleanItem.length > 4 && cleanTarget.includes(cleanItem)) {
+        match = true;
+      } else if (itemWords.length > 0) {
+        const matches = itemWords.filter(w => targetWords.includes(w)).length;
+        if ((matches / itemWords.length >= 0.5 && matches >= 2) || (matches >= 3)) {
+          match = true;
+        }
+      }
+
+      if (match) {
+        const tx = item.transform[4];
+        const ty = item.transform[5];
+        const fontHeight = Math.abs(item.transform[3]) || item.height || 12;
+        const [vx, vy] = viewport.convertToViewportPoint(tx, ty + fontHeight);
+        const vw = (item.width || 40) * (viewport.scale / (viewport.scale / effectiveScale));
+        const vh = fontHeight * (viewport.scale / (viewport.scale / effectiveScale));
+
+        const box = document.createElement('div');
+        box.className = 'pdf-highlight-box pdf-highlight-active';
+        box.style.position = 'absolute';
+        box.style.left = `${Math.max(0, Math.floor(vx - 2))}px`;
+        box.style.top = `${Math.max(0, Math.floor(vy - 2))}px`;
+        box.style.width = `${Math.max(16, Math.floor(vw + 4))}px`;
+        box.style.height = `${Math.max(12, Math.floor(vh + 4))}px`;
+        box.style.backgroundColor = 'rgba(245, 158, 11, 0.35)';
+        box.style.border = '2px solid #f59e0b';
+        box.style.borderRadius = '3px';
+        box.style.zIndex = '15';
+        box.style.pointerEvents = 'auto';
+        box.title = `Cited Source: "${itemStr}"`;
+
+        textLayer.appendChild(box);
+        boxesCreated++;
+        if (!firstBox) firstBox = box;
+      }
+    }
+
+    if (boxesCreated === 0) {
+      const banner = document.createElement('div');
+      banner.className = 'absolute top-3 left-3 right-3 p-2.5 rounded-lg bg-amber-500/90 text-white text-xs font-semibold shadow-lg backdrop-blur-sm z-20 flex items-center justify-between';
+      banner.innerHTML = `
+        <span class="flex items-center gap-1.5 truncate">
+          <i data-lucide="highlighter" class="w-3.5 h-3.5 shrink-0"></i>
+          <span class="truncate">Cited Evidence Grounded on this Page</span>
+        </span>
+        <span class="text-[10px] font-mono bg-white/20 px-1.5 py-0.5 rounded">Page ${pdfViewerState.currentPage}</span>
+      `;
+      textLayer.appendChild(banner);
+      try {
+        lucide.createIcons();
+      } catch (e) {}
+    }
+
+    if (firstBox) {
+      setTimeout(() => {
+        firstBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 150);
+    }
+  } catch (err) {
+    console.warn("Bounding box calculation warning:", err);
+  }
+}
+
+function renderNonPdfDocument(docName, section, snippet, exactText, fileType) {
+  const pageWrapper = document.getElementById('pdf-page-wrapper');
+  const nonPdfViewer = document.getElementById('non-pdf-viewer');
+  const navControls = document.getElementById('pdf-nav-controls');
+  const zoomControls = document.getElementById('pdf-zoom-controls');
+  const jumpBtn = document.getElementById('pdf-highlight-jump-btn');
+
+  if (pageWrapper) pageWrapper.classList.add('hidden');
+  if (navControls) navControls.classList.add('hidden');
+  if (zoomControls) zoomControls.classList.add('hidden');
+  if (jumpBtn) jumpBtn.classList.add('hidden');
+  if (nonPdfViewer) nonPdfViewer.classList.remove('hidden');
+
+  const sectionEl = document.getElementById('non-pdf-doc-section');
+  const badgeEl = document.getElementById('non-pdf-doc-badge');
+  const contentEl = document.getElementById('non-pdf-content');
+
+  if (sectionEl) sectionEl.innerText = section || docName;
+  if (badgeEl) badgeEl.innerText = (fileType || 'DOCX').replace('.', '').toUpperCase();
+
+  const fullText = exactText || snippet || '';
+  let highlightedHtml = escapeHtml(fullText);
+
+  if (snippet && snippet.length > 20) {
+    const cleanSnip = escapeHtml(snippet.substring(0, 80));
+    highlightedHtml = highlightedHtml.replace(
+      cleanSnip,
+      `<mark class="bg-amber-200 text-amber-950 px-1 py-0.5 rounded font-semibold border border-amber-300 shadow-2xs">${cleanSnip}</mark>`
+    );
+  } else {
+    highlightedHtml = `<mark class="bg-amber-200 text-amber-950 px-1 py-0.5 rounded font-semibold border border-amber-300 shadow-2xs">${highlightedHtml}</mark>`;
+  }
+
+  if (contentEl) contentEl.innerHTML = highlightedHtml;
+}
+
+function closePdfSplitViewer() {
+  const viewerCol = document.getElementById('tutor-pdf-viewer-col');
+  const chatCol = document.getElementById('tutor-chat-col');
+  const sourcesCol = document.getElementById('tutor-sources-col');
+
+  if (viewerCol) {
+    viewerCol.classList.add('hidden');
+    viewerCol.classList.remove('flex');
+  }
+  if (chatCol) {
+    chatCol.classList.remove('lg:col-span-5');
+    chatCol.classList.add('lg:col-span-8');
+  }
+  if (sourcesCol) {
+    sourcesCol.classList.remove('hidden');
+    sourcesCol.classList.add('lg:flex');
+  }
+
+  if (pdfViewerState.renderTask) {
+    try {
+      pdfViewerState.renderTask.cancel();
+    } catch (e) {}
+    pdfViewerState.renderTask = null;
+  }
+
+  pdfViewerState.isOpen = false;
+}
+
+async function changePdfPage(delta) {
+  if (!pdfViewerState.pdfDoc) return;
+  const targetPage = pdfViewerState.currentPage + delta;
+  if (targetPage >= 1 && targetPage <= pdfViewerState.totalPages) {
+    await renderPdfPage(targetPage, pdfViewerState.exactText || pdfViewerState.snippet);
+  }
+}
+
+async function zoomPdf(delta) {
+  const newScale = Math.min(Math.max(0.6, pdfViewerState.zoomScale + delta), 2.2);
+  pdfViewerState.zoomScale = Math.round(newScale * 100) / 100;
+  const zoomText = document.getElementById('pdf-zoom-text');
+  if (zoomText) zoomText.innerText = `${Math.round(pdfViewerState.zoomScale * 100)}%`;
+  if (pdfViewerState.pdfDoc) {
+    await renderPdfPage(pdfViewerState.currentPage, pdfViewerState.exactText || pdfViewerState.snippet);
+  }
+}
+
+function scrollToPdfHighlight() {
+  const activeBox = document.querySelector('.pdf-highlight-active');
+  if (activeBox) {
+    activeBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    activeBox.style.outline = '4px solid #3b82f6';
+    setTimeout(() => {
+      activeBox.style.outline = 'none';
+    }, 1200);
+  } else {
+    showToast("Grounded citation is active on this page", "info");
+  }
 }
 
 // 5. 3-Level Doubt Solver Controller

@@ -1,3 +1,4 @@
+import os
 import re
 import math
 from typing import List, Dict, Any, Optional
@@ -163,12 +164,20 @@ class RAGEngine:
 
         for res in context_results:
             c = res["chunk"]
+            page_num_match = re.search(r'\d+', c.get("page_or_slide", ""))
+            page_number = int(page_num_match.group()) if page_num_match else 1
+            doc_ext = os.path.splitext(c.get("doc_name", ""))[1].lower()
+
             citations.append({
+                "doc_id": c.get("doc_id", ""),
                 "doc_name": c["doc_name"],
                 "page_or_slide": c["page_or_slide"],
+                "page_number": page_number,
+                "file_type": doc_ext,
                 "section": c["section"],
                 "topic": c["topic"],
                 "snippet": c["text"][:180] + "...",
+                "exact_text": c["text"],
                 "relevance": res["relevance_percent"]
             })
             context_texts.append(f"[{c['doc_name']} | {c['page_or_slide']} | {c['section']}]:\n{c['text']}")

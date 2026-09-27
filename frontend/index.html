@@ -28,6 +28,14 @@
 
   <!-- Canvas Confetti -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <!-- PDF.js for Split-Screen Grounded Citations -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    if (typeof pdfjsLib !== 'undefined') {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+  </script>
 </head>
 <body class="bg-[#f8fafc] text-slate-900 min-h-screen flex flex-col font-sans relative">
 
@@ -322,51 +330,63 @@
         </div>
       </div>
 
-      <!-- 2-Column NotebookLM Style View -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <!-- Split-Screen NotebookLM Style View -->
+      <div id="tutor-grid-container" class="grid grid-cols-1 lg:grid-cols-12 gap-6 transition-all duration-300">
         <!-- Left: Loaded Source Documents -->
-        <div class="lg:col-span-4 human-card p-4 h-[calc(100vh-230px)] flex flex-col hidden lg:flex">
+        <div id="tutor-sources-col" class="lg:col-span-4 human-card p-4 h-[calc(100vh-230px)] flex flex-col hidden lg:flex transition-all duration-300">
           <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
             <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Source Materials</span>
             <button onclick="switchTab('documents')" class="text-xs text-blue-600 hover:underline font-semibold">+ Add File</button>
           </div>
           <div class="flex-1 overflow-y-auto space-y-2.5 pr-1">
-            <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-xs">
-              <div class="font-semibold text-slate-800 flex items-center gap-1.5">
-                <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-600"></i>
-                <span class="truncate">Convolutional_Neural_Networks.pdf</span>
+            <div onclick="openDocumentViewer('sample_doc_1', 'Convolutional_Neural_Networks.pdf', 1, 'Convolutional Neural Networks (CNNs) are specialized deep learning architectures...', 'Convolutional Neural Networks (CNNs)', '.pdf')" class="p-2.5 rounded-lg bg-slate-50 hover:bg-blue-50/50 cursor-pointer border border-slate-200 transition text-xs group">
+              <div class="font-semibold text-slate-800 group-hover:text-blue-600 flex items-center justify-between gap-1.5">
+                <div class="flex items-center gap-1.5 truncate">
+                  <i data-lucide="file-text" class="w-3.5 h-3.5 text-rose-600 shrink-0"></i>
+                  <span class="truncate">Convolutional_Neural_Networks.pdf</span>
+                </div>
+                <span class="text-[10px] text-blue-600 font-mono px-1 rounded bg-blue-50 opacity-0 group-hover:opacity-100 transition">View</span>
               </div>
               <span class="text-[11px] text-slate-500 mt-1 block">5 pages • CNNs, LeNet, ResNet</span>
             </div>
 
-            <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-xs">
-              <div class="font-semibold text-slate-800 flex items-center gap-1.5">
-                <i data-lucide="file" class="w-3.5 h-3.5 text-blue-600"></i>
-                <span class="truncate">Recurrent_Neural_Networks_and_LSTMs.docx</span>
+            <div onclick="openDocumentViewer('sample_doc_2', 'Recurrent_Neural_Networks_and_LSTMs.docx', 1, 'Recurrent Neural Networks (RNNs) are designed to handle sequential data...', 'Recurrent Neural Networks', '.docx')" class="p-2.5 rounded-lg bg-slate-50 hover:bg-blue-50/50 cursor-pointer border border-slate-200 transition text-xs group">
+              <div class="font-semibold text-slate-800 group-hover:text-blue-600 flex items-center justify-between gap-1.5">
+                <div class="flex items-center gap-1.5 truncate">
+                  <i data-lucide="file" class="w-3.5 h-3.5 text-blue-600 shrink-0"></i>
+                  <span class="truncate">Recurrent_Neural_Networks_and_LSTMs.docx</span>
+                </div>
+                <span class="text-[10px] text-blue-600 font-mono px-1 rounded bg-blue-50 opacity-0 group-hover:opacity-100 transition">View</span>
               </div>
               <span class="text-[11px] text-slate-500 mt-1 block">4 sections • RNNs, BPTT, LSTM Gates</span>
             </div>
 
-            <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-xs">
-              <div class="font-semibold text-slate-800 flex items-center gap-1.5">
-                <i data-lucide="presentation" class="w-3.5 h-3.5 text-amber-600"></i>
-                <span class="truncate">Transformers_and_Attention_Mechanisms.pptx</span>
+            <div onclick="openDocumentViewer('sample_doc_3', 'Transformers_and_Attention_Mechanisms.pptx', 1, 'The Transformer architecture, introduced in Attention Is All You Need...', 'Transformers and Attention', '.pptx')" class="p-2.5 rounded-lg bg-slate-50 hover:bg-blue-50/50 cursor-pointer border border-slate-200 transition text-xs group">
+              <div class="font-semibold text-slate-800 group-hover:text-blue-600 flex items-center justify-between gap-1.5">
+                <div class="flex items-center gap-1.5 truncate">
+                  <i data-lucide="presentation" class="w-3.5 h-3.5 text-amber-600 shrink-0"></i>
+                  <span class="truncate">Transformers_and_Attention_Mechanisms.pptx</span>
+                </div>
+                <span class="text-[10px] text-blue-600 font-mono px-1 rounded bg-blue-50 opacity-0 group-hover:opacity-100 transition">View</span>
               </div>
               <span class="text-[11px] text-slate-500 mt-1 block">4 slides • Scaled Dot Attention</span>
             </div>
 
-            <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-xs">
-              <div class="font-semibold text-slate-800 flex items-center gap-1.5">
-                <i data-lucide="file-code" class="w-3.5 h-3.5 text-slate-600"></i>
-                <span class="truncate">Deep_Learning_Fundamentals.txt</span>
+            <div onclick="openDocumentViewer('sample_doc_4', 'Deep_Learning_Fundamentals.txt', 1, 'Deep learning models are parameterized functions trained via gradient descent...', 'Deep Learning Fundamentals', '.txt')" class="p-2.5 rounded-lg bg-slate-50 hover:bg-blue-50/50 cursor-pointer border border-slate-200 transition text-xs group">
+              <div class="font-semibold text-slate-800 group-hover:text-blue-600 flex items-center justify-between gap-1.5">
+                <div class="flex items-center gap-1.5 truncate">
+                  <i data-lucide="file-code" class="w-3.5 h-3.5 text-slate-600 shrink-0"></i>
+                  <span class="truncate">Deep_Learning_Fundamentals.txt</span>
+                </div>
+                <span class="text-[10px] text-blue-600 font-mono px-1 rounded bg-blue-50 opacity-0 group-hover:opacity-100 transition">View</span>
               </div>
               <span class="text-[11px] text-slate-500 mt-1 block">7 sections • Backprop, Overfitting</span>
             </div>
           </div>
         </div>
 
-        <!-- Right: Chat Messages Stream -->
-        <div class="lg:col-span-8 human-card p-5 h-[calc(100vh-230px)] flex flex-col">
+        <!-- Middle/Right: Chat Messages Stream -->
+        <div id="tutor-chat-col" class="lg:col-span-8 human-card p-5 h-[calc(100vh-230px)] flex flex-col transition-all duration-300">
           <!-- Messages Box -->
           <div id="tutor-messages-container" class="flex-1 overflow-y-auto space-y-4 pr-1">
             <!-- Initial Message -->
@@ -406,6 +426,98 @@
             <div class="mt-1.5 flex items-center justify-between text-[11px] text-slate-400 px-1">
               <span>Answers reference exact page numbers and slides</span>
               <span id="voice-status-badge" class="text-rose-600 font-semibold hidden animate-pulse">● Listening...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Split-Screen PDF & Document Viewer -->
+        <div id="tutor-pdf-viewer-col" class="hidden lg:col-span-7 human-card p-0 h-[calc(100vh-230px)] flex flex-col overflow-hidden transition-all duration-300 relative border border-slate-300/80 shadow-2xl bg-slate-100/90">
+          <!-- Top Toolbar -->
+          <div class="p-3 bg-white/95 backdrop-blur-md border-b border-slate-200 flex items-center justify-between gap-3 shrink-0 z-10">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <div id="pdf-doc-icon-badge" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 border border-rose-200 flex items-center justify-center shrink-0">
+                <i data-lucide="file-text" class="w-4 h-4"></i>
+              </div>
+              <div class="min-w-0">
+                <div class="flex items-center gap-1.5">
+                  <span id="pdf-viewer-doc-title" class="text-xs font-bold text-slate-900 truncate max-w-[160px] sm:max-w-[220px]">Document Viewer</span>
+                  <span id="pdf-viewer-badge" class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">PDF</span>
+                </div>
+                <span id="pdf-viewer-subtitle" class="text-[11px] text-slate-500 block truncate">Interactive Bounding-Box Grounding</span>
+              </div>
+            </div>
+
+            <!-- Action Controls -->
+            <div class="flex items-center gap-1.5">
+              <!-- Page Navigator -->
+              <div id="pdf-nav-controls" class="flex items-center gap-1 bg-slate-100 px-1.5 py-1 rounded-lg border border-slate-200">
+                <button onclick="changePdfPage(-1)" id="pdf-prev-btn" class="p-1 rounded hover:bg-white text-slate-600 disabled:opacity-30 disabled:hover:bg-transparent transition" title="Previous page">
+                  <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>
+                </button>
+                <span id="pdf-page-indicator" class="text-xs font-mono font-medium text-slate-700 px-1 min-w-[70px] text-center">Page 1 / 1</span>
+                <button onclick="changePdfPage(1)" id="pdf-next-btn" class="p-1 rounded hover:bg-white text-slate-600 disabled:opacity-30 disabled:hover:bg-transparent transition" title="Next page">
+                  <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                </button>
+              </div>
+
+              <!-- Zoom Controls -->
+              <div id="pdf-zoom-controls" class="hidden sm:flex items-center gap-1 bg-slate-100 px-1.5 py-1 rounded-lg border border-slate-200">
+                <button onclick="zoomPdf(-0.15)" class="p-1 rounded hover:bg-white text-slate-600 transition" title="Zoom out">
+                  <i data-lucide="zoom-out" class="w-3.5 h-3.5"></i>
+                </button>
+                <span id="pdf-zoom-text" class="text-[11px] font-mono font-medium text-slate-600 px-1">100%</span>
+                <button onclick="zoomPdf(0.15)" class="p-1 rounded hover:bg-white text-slate-600 transition" title="Zoom in">
+                  <i data-lucide="zoom-in" class="w-3.5 h-3.5"></i>
+                </button>
+              </div>
+
+              <!-- Jump to Citation Target -->
+              <button onclick="scrollToPdfHighlight()" id="pdf-highlight-jump-btn" class="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 text-xs font-semibold transition shadow-2xs" title="Focus Highlighted Citation">
+                <i data-lucide="highlighter" class="w-3.5 h-3.5 text-amber-600"></i>
+                <span>Citation</span>
+              </button>
+
+              <!-- Close Split Screen -->
+              <button onclick="closePdfSplitViewer()" class="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 transition hover:text-slate-900" title="Close Split View">
+                <i data-lucide="x" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Citation Quote Bar -->
+          <div id="pdf-citation-header-bar" class="px-3.5 py-2 bg-amber-50/90 border-b border-amber-200/80 flex items-center justify-between text-xs text-amber-900 shrink-0 shadow-2xs">
+            <div class="flex items-center gap-2 overflow-hidden">
+              <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse shrink-0"></span>
+              <span class="font-medium truncate"><strong class="font-bold">Cited in notes:</strong> <span id="pdf-citation-snippet-text" class="italic text-[11px]">Clicking citations jumps here</span></span>
+            </div>
+            <span id="pdf-citation-page-tag" class="shrink-0 px-2 py-0.5 bg-amber-100 rounded text-[10px] font-mono font-bold border border-amber-300 ml-2">Page 1</span>
+          </div>
+
+          <!-- Viewer Scroll Area -->
+          <div id="pdf-viewer-body" class="flex-1 overflow-auto p-4 flex flex-col items-center justify-start relative scroll-smooth">
+            <!-- Loading Spinner -->
+            <div id="pdf-loading-spinner" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-white/80 backdrop-blur-xs z-30">
+              <div class="w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+              <p class="text-xs font-semibold text-slate-600 mt-2.5">Rendering PDF page...</p>
+            </div>
+
+            <!-- PDF Canvas + Bounding Box Text Layer -->
+            <div id="pdf-page-wrapper" class="relative bg-white shadow-xl rounded-sm transition-all duration-200 border border-slate-300">
+              <canvas id="pdf-canvas" class="block"></canvas>
+              <div id="pdf-text-layer" class="pdf-text-layer-overlay"></div>
+            </div>
+
+            <!-- Non-PDF Formatted Card Fallback -->
+            <div id="non-pdf-viewer" class="hidden w-full max-w-2xl bg-white p-6 rounded-xl border border-slate-200 shadow-md space-y-4">
+              <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div class="flex items-center gap-2">
+                  <i data-lucide="file-check-2" class="w-4 h-4 text-blue-600"></i>
+                  <span id="non-pdf-doc-section" class="font-bold text-xs text-slate-800">Source Section / Slide</span>
+                </div>
+                <span id="non-pdf-doc-badge" class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">DOCX</span>
+              </div>
+              <div id="non-pdf-content" class="text-xs text-slate-700 leading-relaxed font-mono whitespace-pre-wrap p-4 rounded-lg bg-slate-50 border border-slate-200">
+              </div>
             </div>
           </div>
         </div>
