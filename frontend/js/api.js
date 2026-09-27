@@ -48,6 +48,60 @@ const api = {
     return res.json();
   },
 
+  async streamTutorQuery(query, topK = 4, onCitations, onToken, onDone, onError) {
+    try {
+      const response = await fetch(`${API_BASE}/api/tutor/chat/stream`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "text/event-stream"
+        },
+        body: JSON.stringify({ query, top_k: topK })
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.detail || `Server returned status ${response.status}`);
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const events = buffer.split("\n\n");
+        buffer = events.pop();
+
+        for (const rawEvent of events) {
+          const lines = rawEvent.split("\n").filter(l => l.startsWith("data: "));
+          for (const line of lines) {
+            const jsonStr = line.replace(/^data:\s*/, "").trim();
+            if (!jsonStr) continue;
+            try {
+              const data = JSON.parse(jsonStr);
+              if (data.event === "citations" && onCitations) {
+                onCitations(data.citations || []);
+              } else if (data.event === "token" && onToken) {
+                onToken(data.token);
+              } else if (data.event === "done" && onDone) {
+                onDone(data);
+              }
+            } catch (e) {
+              console.warn("SSE JSON parse warning:", e);
+            }
+          }
+        }
+      }
+    } catch (err) {
+      if (onError) onError(err);
+      else throw err;
+    }
+  },
+
   async solveDoubt(topicOrQuestion) {
     const res = await fetch(`${API_BASE}/api/tutor/doubt-solver`, {
       method: "POST",

@@ -35,6 +35,16 @@ def run_tests():
     assert len(tutor_data["citations"]) > 0, "Expected citations"
     print(f"✅ AI Tutor RAG Chat: OK (Grounded with {len(tutor_data['citations'])} citations)")
 
+    # 3b. Real-Time SSE Token Streaming
+    res_stream = client.post("/api/tutor/chat/stream", json={"query": "Explain backpropagation in simple words."})
+    assert res_stream.status_code == 200, f"Tutor chat stream failed: {res_stream.text}"
+    assert "text/event-stream" in res_stream.headers.get("content-type", "")
+    stream_events = [e for e in res_stream.text.split("\n\n") if e.strip()]
+    assert len(stream_events) >= 3, "Expected at least 3 SSE events (citations, tokens, done)"
+    assert 'data: {"event": "citations"' in stream_events[0]
+    assert 'data: {"event": "done"' in stream_events[-1]
+    print(f"✅ Real-Time SSE Token Streaming: OK ({len(stream_events)} events streamed word-by-word)")
+
     # 4. Doubt Solver (3 Levels)
     res = client.post("/api/tutor/doubt-solver", json={"topic_or_question": "lstm"})
     assert res.status_code == 200, f"Doubt solver failed: {res.text}"

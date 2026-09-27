@@ -486,6 +486,92 @@ function closeChunksModal() {
   if (modal) modal.classList.add('hidden');
 }
 
+function formatCitationsHtml(citations) {
+  if (!citations || citations.length === 0) return '';
+  window.activeCitationsMap = window.activeCitationsMap || {};
+  return `
+    <div class="mt-3.5 pt-3 border-t border-slate-100">
+      <div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center justify-between">
+        <div class="flex items-center gap-1.5">
+          <i data-lucide="book-open" class="w-3.5 h-3.5 text-blue-600"></i>
+          <span>Cited Sources (Click to View in Split Screen)</span>
+        </div>
+        <span class="text-[10px] text-blue-600 font-mono flex items-center gap-1 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200">
+          <i data-lucide="split" class="w-2.5 h-2.5"></i>
+          Split Viewer
+        </span>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        ${citations.map(c => {
+          const citeKey = `cite_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+          window.activeCitationsMap[citeKey] = c;
+          const ext = (c.file_type || '').toLowerCase();
+          const icon = ext === '.pdf' ? 'file-text' : (ext === '.pptx' ? 'presentation' : (ext === '.docx' ? 'file' : 'file-code'));
+          const isPdf = ext === '.pdf' || (c.doc_name && c.doc_name.toLowerCase().endsWith('.pdf'));
+          const badgeType = isPdf ? 'PDF' : (ext.replace('.', '').toUpperCase() || 'DOC');
+          return `
+            <div onclick="handleCitationClick('${citeKey}')" class="citation-interactive-pill p-2.5 rounded-lg bg-slate-50 hover:bg-blue-50/60 border border-slate-200 hover:border-blue-500 text-xs max-w-sm transition shadow-2xs group cursor-pointer" title="Click to view source in split PDF viewer">
+              <div class="flex items-center justify-between font-semibold text-slate-800 gap-2 mb-1">
+                <span class="truncate max-w-[150px] flex items-center gap-1.5 group-hover:text-blue-600">
+                  <i data-lucide="${icon}" class="w-3.5 h-3.5 text-blue-600 shrink-0"></i>
+                  <span class="truncate">${escapeHtml(c.doc_name)}</span>
+                </span>
+                <div class="flex items-center gap-1 shrink-0">
+                  <span class="text-[9px] uppercase font-mono font-bold px-1 py-0.2 rounded bg-slate-200 text-slate-700">${badgeType}</span>
+                  <span class="text-blue-700 font-mono text-[10px] font-bold bg-blue-100/80 px-1.5 py-0.5 rounded border border-blue-300 flex items-center gap-1">
+                    <i data-lucide="eye" class="w-2.5 h-2.5"></i>
+                    ${escapeHtml(c.page_or_slide)}
+                  </span>
+                </div>
+              </div>
+              <p class="text-[11px] text-slate-500 line-clamp-2">${escapeHtml(c.snippet)}</p>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function appendStreamingChatBubble() {
+  const container = document.getElementById('tutor-messages-container');
+  if (!container) return null;
+
+  const msgId = `stream-msg-${Date.now()}`;
+  const msgDiv = document.createElement('div');
+  msgDiv.id = msgId;
+  msgDiv.className = 'flex gap-3 mb-4 justify-start';
+
+  msgDiv.innerHTML = `
+    <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center shrink-0 mt-0.5 border border-blue-200 shadow-2xs">
+      <i data-lucide="sparkles" class="w-4 h-4 text-blue-600 animate-pulse"></i>
+    </div>
+    <div class="max-w-[85%] p-4 rounded-xl bg-white border border-slate-200 text-slate-800 rounded-tl-none shadow-xs text-sm notes-prose relative">
+      <div class="msg-content leading-relaxed">
+        <div class="stream-text inline"></div>
+        <span class="stream-cursor inline-block w-2 h-4 bg-blue-600 animate-pulse ml-0.5 align-middle rounded-xs"></span>
+      </div>
+      <div class="stream-citations-placeholder"></div>
+      <div class="stream-voice-placeholder"></div>
+    </div>
+  `;
+
+  container.appendChild(msgDiv);
+  container.scrollTop = container.scrollHeight;
+  try {
+    lucide.createIcons();
+  } catch (e) {}
+
+  return {
+    msgId,
+    msgDiv,
+    textEl: msgDiv.querySelector('.stream-text'),
+    cursorEl: msgDiv.querySelector('.stream-cursor'),
+    citationsEl: msgDiv.querySelector('.stream-citations-placeholder'),
+    voiceEl: msgDiv.querySelector('.stream-voice-placeholder')
+  };
+}
+
 // 3. AI Tutor & RAG Chat Controller
 async function sendTutorQuery() {
   const input = document.getElementById('tutor-chat-input');
@@ -494,25 +580,88 @@ async function sendTutorQuery() {
   const query = input.value.trim();
   input.value = '';
 
-  let loadingId = null;
+  // Append user message
+  appendChatMessage('user', query);
+
+  // Append real-time streaming bubble with typewriter cursor
+  const streamBubble = appendStreamingChatBubble();
+  let accumulatedText = '';
+  let citationsReceived = [];
 
   try {
-    // Append user message
-    appendChatMessage('user', query);
+    await api.streamTutorQuery(
+      query,
+      4,
+      // onCitations callback
+      (citations) => {
+        citationsReceived = citations;
+        if (streamBubble && streamBubble.citationsEl) {
+          streamBubble.citationsEl.innerHTML = formatCitationsHtml(citations);
+          try { lucide.createIcons(); } catch (e) {}
+        }
+      },
+      // onToken callback (word-by-word streaming)
+      (token) => {
+        accumulatedText += token;
+        if (streamBubble && streamBubble.textEl) {
+          try {
+            streamBubble.textEl.innerHTML = typeof marked !== 'undefined'
+              ? (typeof marked.parse === 'function' ? marked.parse(accumulatedText) : marked(accumulatedText))
+              : accumulatedText;
+          } catch (e) {
+            streamBubble.textEl.innerHTML = `<p>${accumulatedText.replace(/\n/g, '<br>')}</p>`;
+          }
+        }
+        const container = document.getElementById('tutor-messages-container');
+        if (container) container.scrollTop = container.scrollHeight;
+      },
+      // onDone callback
+      async (doneData) => {
+        if (streamBubble && streamBubble.cursorEl) {
+          streamBubble.cursorEl.remove();
+        }
 
-    // Append loading bubble
-    loadingId = appendChatLoading();
+        if (streamBubble && streamBubble.voiceEl) {
+          streamBubble.voiceEl.innerHTML = `
+            <button onclick="speakMessageContent(this)" class="mt-2 text-xs flex items-center gap-1 text-slate-400 hover:text-blue-600 transition font-medium">
+              <i data-lucide="volume-2" class="w-3.5 h-3.5"></i>
+              <span>Listen Voice</span>
+            </button>
+          `;
+        }
 
-    const res = await api.askTutor(query);
-    removeChatLoading(loadingId);
-    appendChatMessage('tutor', res.answer, res.citations);
-    await refreshGamificationUI();
+        try { lucide.createIcons(); } catch (e) {}
+        if (streamBubble && streamBubble.msgDiv) {
+          safeRenderMath(streamBubble.msgDiv);
+        }
+        await refreshGamificationUI();
+      },
+      // onError fallback
+      async (err) => {
+        console.warn("SSE stream fallback:", err);
+        if (!accumulatedText) {
+          if (streamBubble && streamBubble.msgDiv) streamBubble.msgDiv.remove();
+          const loadingId = appendChatLoading();
+          try {
+            const res = await api.askTutor(query);
+            removeChatLoading(loadingId);
+            appendChatMessage('tutor', res.answer, res.citations);
+            await refreshGamificationUI();
+          } catch (fallbackErr) {
+            removeChatLoading(loadingId);
+            appendChatMessage('tutor', "I checked your study materials for this topic. Please make sure the notes cover this question or ask another question about Neural Networks, CNNs, RNNs, LSTMs, or Transformers.");
+          }
+        } else {
+          if (streamBubble && streamBubble.cursorEl) streamBubble.cursorEl.remove();
+        }
+      }
+    );
   } catch (err) {
     console.error("sendTutorQuery error:", err);
-    if (loadingId) removeChatLoading(loadingId);
-    const orphanLoading = document.querySelector('[id^="loading-"]');
-    if (orphanLoading) orphanLoading.remove();
-    appendChatMessage('tutor', "I checked your study materials for this topic. Please make sure the notes cover this question or ask another question about Neural Networks, CNNs, RNNs, LSTMs, or Transformers.");
+    if (!accumulatedText && streamBubble && streamBubble.msgDiv) {
+      streamBubble.msgDiv.remove();
+      appendChatMessage('tutor', "I checked your study materials for this topic. Please make sure the notes cover this question or ask another question about Neural Networks, CNNs, RNNs, LSTMs, or Transformers.");
+    }
   }
 }
 
@@ -541,52 +690,7 @@ function appendChatMessage(sender, text, citations = []) {
     parsedMarkdown = `<p>${text.replace(/\n/g, '<br>')}</p>`;
   }
 
-  let citationsHtml = '';
-  if (citations && citations.length > 0) {
-    window.activeCitationsMap = window.activeCitationsMap || {};
-    citationsHtml = `
-      <div class="mt-3.5 pt-3 border-t border-slate-100">
-        <div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center justify-between">
-          <div class="flex items-center gap-1.5">
-            <i data-lucide="book-open" class="w-3.5 h-3.5 text-blue-600"></i>
-            <span>Cited Sources (Click to View in Split Screen)</span>
-          </div>
-          <span class="text-[10px] text-blue-600 font-mono flex items-center gap-1 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200">
-            <i data-lucide="split" class="w-2.5 h-2.5"></i>
-            Split Viewer
-          </span>
-        </div>
-        <div class="flex flex-wrap gap-2">
-          ${citations.map(c => {
-            const citeKey = `cite_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
-            window.activeCitationsMap[citeKey] = c;
-            const ext = (c.file_type || '').toLowerCase();
-            const icon = ext === '.pdf' ? 'file-text' : (ext === '.pptx' ? 'presentation' : (ext === '.docx' ? 'file' : 'file-code'));
-            const isPdf = ext === '.pdf' || (c.doc_name && c.doc_name.toLowerCase().endsWith('.pdf'));
-            const badgeType = isPdf ? 'PDF' : (ext.replace('.', '').toUpperCase() || 'DOC');
-            return `
-              <div onclick="handleCitationClick('${citeKey}')" class="citation-interactive-pill p-2.5 rounded-lg bg-slate-50 hover:bg-blue-50/60 border border-slate-200 hover:border-blue-500 text-xs max-w-sm transition shadow-2xs group cursor-pointer" title="Click to view source in split PDF viewer">
-                <div class="flex items-center justify-between font-semibold text-slate-800 gap-2 mb-1">
-                  <span class="truncate max-w-[150px] flex items-center gap-1.5 group-hover:text-blue-600">
-                    <i data-lucide="${icon}" class="w-3.5 h-3.5 text-blue-600 shrink-0"></i>
-                    <span class="truncate">${escapeHtml(c.doc_name)}</span>
-                  </span>
-                  <div class="flex items-center gap-1 shrink-0">
-                    <span class="text-[9px] uppercase font-mono font-bold px-1 py-0.2 rounded bg-slate-200 text-slate-700">${badgeType}</span>
-                    <span class="text-blue-700 font-mono text-[10px] font-bold bg-blue-100/80 px-1.5 py-0.5 rounded border border-blue-300 flex items-center gap-1">
-                      <i data-lucide="eye" class="w-2.5 h-2.5"></i>
-                      ${escapeHtml(c.page_or_slide)}
-                    </span>
-                  </div>
-                </div>
-                <p class="text-[11px] text-slate-500 line-clamp-2">${escapeHtml(c.snippet)}</p>
-              </div>
-            `;
-          }).join('')}
-        </div>
-      </div>
-    `;
-  }
+  const citationsHtml = formatCitationsHtml(citations);
 
   const voiceBtnHtml = sender === 'tutor' ? `
     <button onclick="speakMessageContent(this)" class="mt-2 text-xs flex items-center gap-1 text-slate-400 hover:text-blue-600 transition font-medium">

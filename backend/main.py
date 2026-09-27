@@ -1,10 +1,13 @@
 import os
 import shutil
+import json
+import asyncio
+import re
 from typing import Optional, List
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from pydantic import BaseModel
 
 from backend.config import settings, UPLOADS_DIR, FRONTEND_DIR
@@ -171,6 +174,58 @@ async def tutor_chat(req: TutorQueryRequest):
     response = tutor_engine.answer_query(req.query, top_k=req.top_k)
     gamification_engine.add_xp(15, "Consulted AI Tutor")
     return response
+
+# 3b. Real-Time Token Streaming (Server-Sent Events / SSE)
+@app.post("/api/tutor/chat/stream")
+async def tutor_chat_stream(req: TutorQueryRequest):
+    if not req.query.strip():
+        raise HTTPException(status_code=400, detail="Query cannot be empty")
+
+    response = tutor_engine.answer_query(req.query, top_k=req.top_k)
+    gamification_engine.add_xp(15, "Consulted AI Tutor (Stream)")
+
+    async def event_generator():
+        # 1. Send initial context with citations and grounding metadata
+        init_payload = {
+            "event": "citations",
+            "citations": response.get("citations", []),
+            "grounded": response.get("grounded", True)
+        }
+        yield f"data: {json.dumps(init_payload)}\n\n"
+        await asyncio.sleep(0.04)
+
+        # 2. Tokenize answer into words/chunks and stream with typewriter pacing
+        full_text = response.get("answer", "")
+        tokens = re.findall(r'\S+\s*', full_text)
+        if not tokens:
+            tokens = [full_text]
+
+        for token in tokens:
+            token_payload = {
+                "event": "token",
+                "token": token
+            }
+            yield f"data: {json.dumps(token_payload)}\n\n"
+            await asyncio.sleep(0.016)
+
+        # 3. Stream completion event
+        done_payload = {
+            "event": "done",
+            "full_text": full_text,
+            "citations": response.get("citations", []),
+            "grounded": response.get("grounded", True)
+        }
+        yield f"data: {json.dumps(done_payload)}\n\n"
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no"
+        }
+    )
 
 # 4. Adaptive 3-Level Doubt Solver
 @app.post("/api/tutor/doubt-solver")

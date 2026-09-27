@@ -22,9 +22,9 @@
     "chunk_count": 7,
     "topics": [
       "Backpropagation & Optimization",
-      "Forward & Loss Functions",
+      "Overfitting & Regularization",
       "Neural Networks",
-      "Overfitting & Regularization"
+      "Forward & Loss Functions"
     ],
     "is_sample": true
   },
@@ -36,9 +36,9 @@
     "file_size_kb": 4.6,
     "chunk_count": 10,
     "topics": [
-      "Recurrent Neural Networks (RNN)",
       "Attention & Transformers",
-      "Deep Learning Fundamentals"
+      "Deep Learning Fundamentals",
+      "Recurrent Neural Networks (RNN)"
     ],
     "is_sample": true
   },
@@ -50,8 +50,8 @@
     "file_size_kb": 5.0,
     "chunk_count": 10,
     "topics": [
-      "Vanishing Gradient Problem",
-      "Deep Learning Fundamentals"
+      "Deep Learning Fundamentals",
+      "Vanishing Gradient Problem"
     ],
     "is_sample": true
   },
@@ -91,8 +91,8 @@
     "file_size_kb": 30.9,
     "chunk_count": 4,
     "topics": [
-      "Recurrent Neural Networks (RNN)",
-      "Attention & Transformers"
+      "Attention & Transformers",
+      "Recurrent Neural Networks (RNN)"
     ],
     "is_sample": true
   },
