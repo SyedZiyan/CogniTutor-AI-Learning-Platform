@@ -344,6 +344,20 @@
             <button onclick="switchTab('documents')" class="text-xs text-blue-600 hover:underline font-semibold">+ Add File</button>
           </div>
           <div class="flex-1 overflow-y-auto space-y-2.5 pr-1">
+            <!-- Audio Overview Studio Quick Launcher -->
+            <div onclick="switchTab('podcast')" class="p-2.5 rounded-xl bg-gradient-to-r from-indigo-50/80 to-blue-50/80 border border-indigo-200/80 cursor-pointer hover:border-indigo-400 hover:shadow-xs transition flex items-center justify-between group">
+              <div class="flex items-center gap-2">
+                <div class="w-7 h-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
+                  <i data-lucide="headphones" class="w-3.5 h-3.5"></i>
+                </div>
+                <div>
+                  <h5 class="text-xs font-bold text-slate-900 group-hover:text-indigo-700">Audio Overviews</h5>
+                  <p class="text-[10px] text-slate-500">Listen to dual-host podcasts</p>
+                </div>
+              </div>
+              <span class="text-[10px] font-mono font-bold text-indigo-600 bg-white px-1.5 py-0.5 rounded border border-indigo-200">Listen</span>
+            </div>
+
             <div onclick="openDocumentViewer('sample_doc_1', 'Convolutional_Neural_Networks.pdf', 1, 'Convolutional Neural Networks (CNNs) are specialized deep learning architectures...', 'Convolutional Neural Networks (CNNs)', '.pdf')" class="p-2.5 rounded-lg bg-slate-50 hover:bg-blue-50/50 cursor-pointer border border-slate-200 transition text-xs group">
               <div class="font-semibold text-slate-800 group-hover:text-blue-600 flex items-center justify-between gap-1.5">
                 <div class="flex items-center gap-1.5 truncate">
@@ -1059,7 +1073,15 @@
             </h3>
           </div>
 
-          <div class="flex items-center gap-2 shrink-0">
+          <div class="flex items-center gap-2 shrink-0 flex-wrap">
+            <button onclick="togglePodcastPlay()" id="podcast-hero-play-btn" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs flex items-center gap-2 shadow-sm transition hover:scale-102">
+              <i data-lucide="play" class="w-4 h-4 fill-white"></i>
+              <span id="podcast-hero-play-text">Play Episode</span>
+            </button>
+            <button onclick="testPodcastAudioSystem()" id="podcast-test-audio-btn" class="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition" title="Test browser voice & chime output">
+              <i data-lucide="volume-2" class="w-3.5 h-3.5 text-indigo-600"></i>
+              <span>Test Audio</span>
+            </button>
             <button onclick="downloadPodcastNotes()" class="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition">
               <i data-lucide="file-text" class="w-3.5 h-3.5 text-blue-600"></i>
               <span>Save Notes</span>

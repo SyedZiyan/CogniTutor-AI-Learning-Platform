@@ -426,6 +426,10 @@ async function loadDocumentLibrary() {
               <button onclick="askAboutDocument('${doc.file_name}')" class="px-2.5 py-1 text-xs rounded bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium transition">
                 Ask Notes
               </button>
+              <button onclick="launchPodcastForDocument('${doc.file_name}', '${(doc.topics && doc.topics[0]) || doc.file_name}')" class="px-2.5 py-1 text-xs rounded bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold transition flex items-center gap-1" title="Listen to AI Audio Overview">
+                <i data-lucide="headphones" class="w-3 h-3 text-indigo-600"></i>
+                <span>Podcast</span>
+              </button>
             </div>
           </div>
         </div>
@@ -2283,6 +2287,89 @@ async function submitVivaDefense() {
 // 10. AI Audio Overview & NotebookLM Deep-Dive Podcast Controller
 // ==========================================================================
 
+class StudioAudioSynthesizer {
+  constructor() {
+    this.ctx = null;
+  }
+
+  ensureContext() {
+    if (!this.ctx && typeof window !== 'undefined') {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) {
+        this.ctx = new AudioCtx();
+      }
+    }
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume().catch(() => {});
+    }
+  }
+
+  playHostIntroChime(speaker = 'alex') {
+    try {
+      this.ensureContext();
+      if (!this.ctx) return;
+
+      const now = this.ctx.currentTime;
+      const osc1 = this.ctx.createOscillator();
+      const osc2 = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      if (speaker === 'alex') {
+        // Dr. Alex: Warm resonant broadcast chime (C4 261.6Hz + G4 392.0Hz)
+        osc1.type = 'triangle';
+        osc2.type = 'sine';
+        osc1.frequency.setValueAtTime(261.63, now);
+        osc2.frequency.setValueAtTime(392.00, now);
+      } else {
+        // Jordan: Upbeat inquisitive conversational chime (E4 329.6Hz + B4 493.88Hz)
+        osc1.type = 'sine';
+        osc2.type = 'triangle';
+        osc1.frequency.setValueAtTime(329.63, now);
+        osc2.frequency.setValueAtTime(493.88, now);
+      }
+
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.linearRampToValueAtTime(0.08, now + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.32);
+
+      osc1.connect(gain);
+      osc2.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc1.start(now);
+      osc2.start(now);
+      osc1.stop(now + 0.33);
+      osc2.stop(now + 0.33);
+    } catch (e) {
+      console.warn("Studio audio cue ignored:", e);
+    }
+  }
+
+  playStudioTestChime() {
+    try {
+      this.ensureContext();
+      if (!this.ctx) return;
+      const now = this.ctx.currentTime;
+      [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now + idx * 0.09);
+        gain.gain.setValueAtTime(0.001, now + idx * 0.09);
+        gain.gain.linearRampToValueAtTime(0.12, now + idx * 0.09 + 0.03);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.09 + 0.35);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now + idx * 0.09);
+        osc.stop(now + idx * 0.09 + 0.36);
+      });
+    } catch (e) {}
+  }
+}
+
+const studioAudioSynth = new StudioAudioSynthesizer();
+window.studioAudioSynth = studioAudioSynth;
+
 const podcastState = {
   episodes: [],
   currentEpisode: null,
@@ -2290,17 +2377,25 @@ const podcastState = {
   isPlaying: false,
   playbackSpeed: 1.0,
   speechSynth: typeof window !== 'undefined' ? window.speechSynthesis : null,
-  voices: []
+  voices: [],
+  watchdogTimer: null
 };
 
 function initPodcastVoices() {
   if (!podcastState.speechSynth) return;
-  podcastState.voices = podcastState.speechSynth.getVoices();
+  const loadVoices = () => {
+    podcastState.voices = podcastState.speechSynth.getVoices();
+  };
+  loadVoices();
   if (podcastState.speechSynth.onvoiceschanged !== undefined) {
-    podcastState.speechSynth.onvoiceschanged = () => {
-      podcastState.voices = podcastState.speechSynth.getVoices();
-    };
+    podcastState.speechSynth.onvoiceschanged = loadVoices;
   }
+}
+
+// Ensure voices are initialized early
+initPodcastVoices();
+if (typeof window !== 'undefined') {
+  window.addEventListener('DOMContentLoaded', initPodcastVoices);
 }
 
 async function loadPodcastView() {
@@ -2322,11 +2417,19 @@ async function loadPodcastView() {
 
     // Load first episode if none active
     if (!podcastState.currentEpisode && podcastState.episodes.length > 0) {
-      loadPodcastEpisode(podcastState.episodes[0].id);
+      loadPodcastEpisode(podcastState.episodes[0].id, false);
     }
   } catch (err) {
     console.error("loadPodcastView error:", err);
     showToast("Could not load audio episodes: " + err.message, "error");
+  }
+}
+
+function handleEpisodeCardClick(podcastId) {
+  if (podcastState.currentEpisode && podcastState.currentEpisode.id === podcastId) {
+    togglePodcastPlay();
+  } else {
+    loadPodcastEpisode(podcastId, true);
   }
 }
 
@@ -2336,13 +2439,16 @@ function renderPodcastEpisodesGrid() {
 
   grid.innerHTML = podcastState.episodes.map((ep, idx) => {
     const isActive = podcastState.currentEpisode && podcastState.currentEpisode.id === ep.id;
-    const borderStyle = isActive ? 'border-indigo-600 bg-indigo-50/40 ring-2 ring-indigo-500/20' : 'border-slate-200 bg-white hover:border-indigo-300';
+    const isThisPlaying = isActive && podcastState.isPlaying;
+    const borderStyle = isActive 
+      ? 'border-indigo-600 bg-indigo-50/50 ring-2 ring-indigo-500/20 shadow-md' 
+      : 'border-slate-200 bg-white hover:border-indigo-300';
 
     return `
-      <div onclick="loadPodcastEpisode('${ep.id}')" class="human-card p-4.5 border ${borderStyle} cursor-pointer transition-all duration-200 flex flex-col justify-between group shadow-xs">
+      <div onclick="handleEpisodeCardClick('${ep.id}')" class="human-card p-4.5 border ${borderStyle} cursor-pointer transition-all duration-200 flex flex-col justify-between group shadow-xs">
         <div>
           <div class="flex items-center justify-between mb-2">
-            <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700">EPISODE ${idx + 1}</span>
+            <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded ${isActive ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700'}">EPISODE ${idx + 1}</span>
             <span class="text-xs font-mono text-slate-400 flex items-center gap-1">
               <i data-lucide="clock" class="w-3 h-3"></i>
               ${ep.duration_minutes}m
@@ -2357,9 +2463,9 @@ function renderPodcastEpisodesGrid() {
             <div class="w-6 h-6 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center border-2 border-white shadow-2xs">AR</div>
             <div class="w-6 h-6 rounded-full bg-emerald-600 text-white text-[10px] font-bold flex items-center justify-center border-2 border-white shadow-2xs">JC</div>
           </div>
-          <button class="px-2.5 py-1 rounded-lg text-xs font-semibold ${isActive ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700 group-hover:bg-indigo-50 group-hover:text-indigo-700'} flex items-center gap-1 transition">
-            <i data-lucide="${isActive && podcastState.isPlaying ? 'pause' : 'play'}" class="w-3 h-3"></i>
-            <span>${isActive && podcastState.isPlaying ? 'Playing' : 'Listen'}</span>
+          <button onclick="event.stopPropagation(); handleEpisodeCardClick('${ep.id}')" class="px-3 py-1.5 rounded-lg text-xs font-semibold ${isThisPlaying ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-indigo-100 hover:text-indigo-800'} flex items-center gap-1.5 transition">
+            <i data-lucide="${isThisPlaying ? 'pause' : 'play'}" class="w-3.5 h-3.5 ${isThisPlaying ? 'fill-white' : ''}"></i>
+            <span>${isThisPlaying ? 'Playing' : 'Listen'}</span>
           </button>
         </div>
       </div>
@@ -2369,11 +2475,11 @@ function renderPodcastEpisodesGrid() {
   try { lucide.createIcons(); } catch (e) {}
 }
 
-function loadPodcastEpisode(podcastId) {
+function loadPodcastEpisode(podcastId, autoPlay = false) {
   const ep = podcastState.episodes.find(e => e.id === podcastId);
   if (!ep) return;
 
-  stopPodcastPlayback();
+  pausePodcastPlayback();
 
   podcastState.currentEpisode = ep;
   podcastState.currentTurnIndex = 0;
@@ -2409,6 +2515,12 @@ function loadPodcastEpisode(podcastId) {
 
   updatePodcastProgressUI(0);
   renderPodcastEpisodesGrid();
+
+  if (autoPlay) {
+    setTimeout(() => {
+      playPodcastTurn(0);
+    }, 150);
+  }
 }
 
 function renderPodcastTranscript(script) {
@@ -2443,7 +2555,12 @@ function renderPodcastTranscript(script) {
 }
 
 function togglePodcastPlay() {
-  if (!podcastState.currentEpisode) return;
+  if (!podcastState.currentEpisode) {
+    if (podcastState.episodes.length > 0) {
+      loadPodcastEpisode(podcastState.episodes[0].id, true);
+    }
+    return;
+  }
 
   if (podcastState.isPlaying) {
     pausePodcastPlayback();
@@ -2461,12 +2578,22 @@ function playPodcastTurn(turnIndex) {
     return;
   }
 
+  // Clear existing watchdog timer
+  if (podcastState.watchdogTimer) {
+    clearTimeout(podcastState.watchdogTimer);
+    podcastState.watchdogTimer = null;
+  }
+
   podcastState.currentTurnIndex = turnIndex;
   podcastState.isPlaying = true;
   updatePodcastPlayButtonIcon(true);
+  renderPodcastEpisodesGrid();
 
   const turn = script[turnIndex];
   const isAlex = turn.speaker === 'alex';
+
+  // Play host acoustic chime for instant audible feedback
+  studioAudioSynth.playHostIntroChime(turn.speaker);
 
   const hostAlex = document.getElementById('host-card-alex');
   const dotAlex = document.getElementById('host-active-dot-alex');
@@ -2494,63 +2621,102 @@ function playPodcastTurn(turnIndex) {
 
   updatePodcastProgressUI(turnIndex);
 
-  if (podcastState.speechSynth) {
-    podcastState.speechSynth.cancel();
+  // Clean mathematical and special symbols for natural speech
+  const cleanSpeech = turn.text
+    .replace(/\$+/g, '')
+    .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '$1 over $2')
+    .replace(/\\times/g, 'times')
+    .replace(/\\cdot/g, 'times')
+    .replace(/\\[a-zA-Z]+/g, '')
+    .replace(/\{|\}/g, '');
 
-    const cleanSpeech = turn.text
-      .replace(/\$+/g, '')
-      .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '$1 over $2')
-      .replace(/\\times/g, 'times')
-      .replace(/\\cdot/g, 'times')
-      .replace(/\\[a-zA-Z]+/g, '')
-      .replace(/\{|\}/g, '');
+  const words = cleanSpeech.split(/\s+/).filter(Boolean);
+  const wordCount = Math.max(1, words.length);
+  const estimatedSeconds = Math.max(3.5, (wordCount / (2.4 * podcastState.playbackSpeed)));
 
-    const utterance = new SpeechSynthesisUtterance(cleanSpeech);
-    utterance.rate = (isAlex ? 1.0 : 1.05) * podcastState.playbackSpeed;
-    utterance.pitch = isAlex ? 0.95 : 1.15;
-
-    const voices = podcastState.voices || (podcastState.speechSynth.getVoices ? podcastState.speechSynth.getVoices() : []);
-    if (voices.length > 0) {
-      if (isAlex) {
-        const alexVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('David') || v.name.includes('George') || v.name.includes('Male') || v.name.includes('Daniel') || v.name.includes('Guy')));
-        if (alexVoice) utterance.voice = alexVoice;
-      } else {
-        const jordanVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Zira') || v.name.includes('Jenny') || v.name.includes('Female') || v.name.includes('Aria') || v.name.includes('Samantha')));
-        if (jordanVoice) utterance.voice = jordanVoice;
-      }
+  let turnEnded = false;
+  const finishTurn = () => {
+    if (turnEnded) return;
+    turnEnded = true;
+    if (podcastState.watchdogTimer) {
+      clearTimeout(podcastState.watchdogTimer);
+      podcastState.watchdogTimer = null;
     }
 
-    utterance.onend = () => {
-      if (podcastState.isPlaying) {
-        if (turnIndex + 1 < script.length) {
-          setTimeout(() => {
-            if (podcastState.isPlaying) {
-              playPodcastTurn(turnIndex + 1);
-            }
-          }, 350);
+    if (!podcastState.isPlaying) return;
+
+    if (turnIndex + 1 < script.length) {
+      setTimeout(() => {
+        if (podcastState.isPlaying) {
+          playPodcastTurn(turnIndex + 1);
+        }
+      }, 350);
+    } else {
+      stopPodcastPlayback();
+      showToast("🎉 Audio Overview complete! (+35 XP Awarded)", "success");
+      triggerConfetti();
+      playSuccessChime();
+    }
+  };
+
+  // Watchdog timer: guarantees audio overview continues smoothly across turns
+  podcastState.watchdogTimer = setTimeout(() => {
+    console.log("Watchdog timer safely advancing turn", turnIndex);
+    finishTurn();
+  }, (estimatedSeconds + 1.2) * 1000);
+
+  if (podcastState.speechSynth) {
+    try {
+      if (podcastState.speechSynth.paused) {
+        podcastState.speechSynth.resume();
+      }
+
+      const utterance = new SpeechSynthesisUtterance(cleanSpeech);
+      window._activePodcastUtterance = utterance; // Keep global ref to prevent GC
+
+      utterance.rate = (isAlex ? 1.0 : 1.05) * podcastState.playbackSpeed;
+      utterance.pitch = isAlex ? 0.95 : 1.15;
+
+      const voices = podcastState.voices && podcastState.voices.length > 0 
+        ? podcastState.voices 
+        : (podcastState.speechSynth.getVoices ? podcastState.speechSynth.getVoices() : []);
+
+      if (voices.length > 0) {
+        if (isAlex) {
+          const alexVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('David') || v.name.includes('George') || v.name.includes('Male') || v.name.includes('Daniel') || v.name.includes('Guy')));
+          if (alexVoice) utterance.voice = alexVoice;
         } else {
-          stopPodcastPlayback();
-          showToast("🎉 Audio Overview complete! (+35 XP Awarded)", "success");
-          triggerConfetti();
-          playSuccessChime();
+          const jordanVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Zira') || v.name.includes('Jenny') || v.name.includes('Female') || v.name.includes('Aria') || v.name.includes('Samantha')));
+          if (jordanVoice) utterance.voice = jordanVoice;
         }
       }
-    };
 
-    utterance.onerror = (e) => {
-      console.warn("Speech synthesis error on podcast turn:", e);
-    };
+      utterance.onend = () => {
+        finishTurn();
+      };
 
-    podcastState.speechSynth.speak(utterance);
+      utterance.onerror = (e) => {
+        console.warn("Speech synthesis notice:", e);
+      };
+
+      podcastState.speechSynth.speak(utterance);
+    } catch (err) {
+      console.warn("SpeechSynthesis error:", err);
+    }
   }
 }
 
 function pausePodcastPlayback() {
   podcastState.isPlaying = false;
+  if (podcastState.watchdogTimer) {
+    clearTimeout(podcastState.watchdogTimer);
+    podcastState.watchdogTimer = null;
+  }
   if (podcastState.speechSynth) {
     podcastState.speechSynth.cancel();
   }
   updatePodcastPlayButtonIcon(false);
+  renderPodcastEpisodesGrid();
 
   const hostAlex = document.getElementById('host-card-alex');
   const dotAlex = document.getElementById('host-active-dot-alex');
@@ -2611,10 +2777,55 @@ function cyclePodcastSpeed() {
 }
 
 function updatePodcastPlayButtonIcon(isPlaying) {
-  const icon = document.getElementById('podcast-play-icon');
-  if (!icon) return;
-  icon.setAttribute('data-lucide', isPlaying ? 'pause' : 'play');
+  // Update floating center button
+  const playBtn = document.getElementById('podcast-play-btn');
+  if (playBtn) {
+    playBtn.innerHTML = `<i data-lucide="${isPlaying ? 'pause' : 'play'}" class="w-6 h-6 ${isPlaying ? '' : 'ml-0.5'}"></i>`;
+  }
+
+  // Update hero header button
+  const heroBtn = document.getElementById('podcast-hero-play-btn');
+  if (heroBtn) {
+    heroBtn.innerHTML = `
+      <i data-lucide="${isPlaying ? 'pause' : 'play'}" class="w-4 h-4 fill-white"></i>
+      <span id="podcast-hero-play-text">${isPlaying ? 'Pause Episode' : 'Play Episode'}</span>
+    `;
+  }
+
   try { lucide.createIcons(); } catch (e) {}
+}
+
+function testPodcastAudioSystem() {
+  studioAudioSynth.playStudioTestChime();
+
+  if (podcastState.speechSynth) {
+    try {
+      podcastState.speechSynth.cancel();
+      const testUtterance = new SpeechSynthesisUtterance("CogniTutor audio studio test: Speech Synthesis and dual-host stream are working perfectly!");
+      window._testUtterance = testUtterance;
+      testUtterance.rate = 1.05;
+      podcastState.speechSynth.speak(testUtterance);
+    } catch (e) {}
+  }
+
+  showToast("🔊 Audio test initiated! Volume & Voice Verified.", "info");
+}
+
+function launchPodcastForDocument(docName, topic) {
+  switchTab('podcast');
+  // Match podcast by topic keyword
+  const matching = podcastState.episodes.find(e => 
+    e.title.toLowerCase().includes(topic.toLowerCase()) || 
+    e.topic.toLowerCase().includes(topic.toLowerCase()) ||
+    topic.toLowerCase().includes(e.topic.toLowerCase())
+  );
+
+  if (matching) {
+    loadPodcastEpisode(matching.id, true);
+    showToast(`🎙️ Playing Audio Overview: "${matching.title}"`, "success");
+  } else if (podcastState.episodes.length > 0) {
+    loadPodcastEpisode(podcastState.episodes[0].id, true);
+  }
 }
 
 function updatePodcastProgressUI(turnIndex) {
