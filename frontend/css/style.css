@@ -818,3 +818,46 @@ body.dark-theme .citation-interactive-pill:hover {
   border-color: #60a5fa !important;
 }
 
+/* ==========================================================================
+   AI Audio Overview / NotebookLM Studio Equalizer & Live Transcript
+   ========================================================================== */
+@keyframes eq-wave-1 { 0%, 100% { height: 6px; } 50% { height: 16px; } }
+@keyframes eq-wave-2 { 0%, 100% { height: 14px; } 50% { height: 4px; } }
+@keyframes eq-wave-3 { 0%, 100% { height: 4px; } 50% { height: 18px; } }
+@keyframes eq-wave-4 { 0%, 100% { height: 12px; } 50% { height: 6px; } }
+
+.host-speaking {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 8px 24px -4px rgba(59, 130, 246, 0.25) !important;
+  background-color: #eff6ff !important;
+}
+
+body.dark-theme .host-speaking {
+  background-color: #1e293b !important;
+  border-color: #60a5fa !important;
+}
+
+.host-speaking #host-equalizer-alex,
+.host-speaking #host-equalizer-jordan {
+  opacity: 1 !important;
+}
+
+.host-speaking .w-1:nth-child(1) { animation: eq-wave-1 0.7s infinite ease-in-out; }
+.host-speaking .w-1:nth-child(2) { animation: eq-wave-2 0.6s infinite ease-in-out; }
+.host-speaking .w-1:nth-child(3) { animation: eq-wave-3 0.8s infinite ease-in-out; }
+.host-speaking .w-1:nth-child(4) { animation: eq-wave-4 0.5s infinite ease-in-out; }
+
+.podcast-turn-active {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 6px 20px -3px rgba(59, 130, 246, 0.2) !important;
+  background-color: #f8fafc !important;
+  border-left-width: 4px !important;
+  border-left-color: #2563eb !important;
+}
+
+body.dark-theme .podcast-turn-active {
+  border-color: #60a5fa !important;
+  background-color: #1e293b !important;
+  border-left-color: #3b82f6 !important;
+}
+

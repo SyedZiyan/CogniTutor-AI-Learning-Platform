@@ -121,7 +121,24 @@ def run_tests():
     assert "feedback" in viva_r1 and "next_question" in viva_r1
     print(f"✅ Socratic Viva Round 1 Defense: OK (Score: {viva_r1['score_this_round']}/100, Examiner Critique received)")
 
-    print("\n🎉 ALL 12 TEST SUITES PASSED FLAWLESSLY!\n")
+    # 13. AI Audio Overviews / Deep-Dive Podcasts (NotebookLM Style)
+    res_pod = client.get("/api/podcasts")
+    assert res_pod.status_code == 200, f"Podcasts list failed: {res_pod.text}"
+    podcasts_data = res_pod.json()["podcasts"]
+    assert len(podcasts_data) >= 3, "Expected at least 3 preloaded deep dives"
+    first_pod = podcasts_data[0]
+    assert len(first_pod["script"]) >= 4, "Expected multi-turn script"
+    assert len(first_pod["hosts"]) == 2, "Expected 2 hosts (Alex & Jordan)"
+    print(f"✅ AI Audio Overviews (Podcasts): OK ({len(podcasts_data)} deep-dives, {len(first_pod['script'])} dual-host turns)")
+
+    # Test dynamic generation
+    res_gen = client.post("/api/podcast/generate", json={"topic": "Transformers and Self-Attention"})
+    assert res_gen.status_code == 200, f"Podcast generate failed: {res_gen.text}"
+    gen_pod = res_gen.json()
+    assert "script" in gen_pod and len(gen_pod["script"]) >= 4
+    print(f"✅ Dynamic Podcast Synthesis: OK ('{gen_pod['title']}' generated with {len(gen_pod['chapters'])} chapters)")
+
+    print("\n🎉 ALL 13 TEST SUITES PASSED FLAWLESSLY!\n")
 
 if __name__ == "__main__":
     run_tests()

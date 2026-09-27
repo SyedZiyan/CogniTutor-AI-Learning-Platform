@@ -67,6 +67,14 @@ class GamificationEngine:
             "icon": "🎙️",
             "unlocked": False,
             "unlocked_at": None
+        },
+        {
+            "id": "b_audio_overview",
+            "name": "Audio Scholar",
+            "description": "Listened to an AI Audio Overview / Deep-Dive Podcast",
+            "icon": "🎧",
+            "unlocked": False,
+            "unlocked_at": None
         }
     ]
 

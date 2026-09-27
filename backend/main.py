@@ -20,6 +20,7 @@ from backend.roadmap_engine import roadmap_engine
 from backend.gamification import gamification_engine
 from backend.knowledge_graph import knowledge_graph_engine
 from backend.viva_engine import socratic_viva_engine
+from backend.podcast_engine import podcast_engine
 
 app = FastAPI(
     title=settings.app_name,
@@ -61,6 +62,10 @@ class VivaStartRequest(BaseModel):
 class VivaRespondRequest(BaseModel):
     session_id: str
     student_transcript: str
+
+class PodcastGenerateRequest(BaseModel):
+    topic: Optional[str] = "all"
+    doc_ids: Optional[List[str]] = None
 
 class SettingsUpdateRequest(BaseModel):
     openai_api_key: Optional[str] = None
@@ -345,6 +350,25 @@ async def respond_viva_session(req: VivaRespondRequest):
     if "error" in result:
         raise HTTPException(status_code=400, detail=result["error"])
     return result
+
+# 12. AI Audio Overviews / Deep-Dive Podcasts (NotebookLM Style)
+@app.get("/api/podcasts")
+async def get_podcasts():
+    return {"podcasts": podcast_engine.get_all_podcasts()}
+
+@app.get("/api/podcasts/{podcast_id}")
+async def get_podcast(podcast_id: str):
+    podcast = podcast_engine.get_podcast_by_id(podcast_id)
+    if not podcast:
+        raise HTTPException(status_code=404, detail="Podcast not found")
+    return podcast
+
+@app.post("/api/podcast/generate")
+async def generate_podcast(req: PodcastGenerateRequest):
+    podcast = podcast_engine.generate_podcast_overview(topic=req.topic, doc_ids=req.doc_ids)
+    gamification_engine.add_xp(35, f"Generated Audio Overview: {podcast['title']}")
+    gamification_engine.unlock_badge("b_audio_overview")
+    return podcast
 
 # Mount static frontend directory
 if os.path.exists(FRONTEND_DIR):

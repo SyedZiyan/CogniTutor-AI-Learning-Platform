@@ -179,6 +179,7 @@ function switchTab(tabId) {
   if (tabId === 'quiz') initializeQuizView();
   if (tabId === 'graph') loadConceptGraphView();
   if (tabId === 'viva') loadVivaView();
+  if (tabId === 'podcast') loadPodcastView();
 
   lucide.createIcons();
 }
@@ -2266,5 +2267,430 @@ async function submitVivaDefense() {
     submitBtn.innerHTML = `<i data-lucide="send" class="w-3.5 h-3.5"></i><span>Submit Defense</span>`;
     lucide.createIcons();
   }
+}
+
+// ==========================================================================
+// 10. AI Audio Overview & NotebookLM Deep-Dive Podcast Controller
+// ==========================================================================
+
+const podcastState = {
+  episodes: [],
+  currentEpisode: null,
+  currentTurnIndex: 0,
+  isPlaying: false,
+  playbackSpeed: 1.0,
+  speechSynth: typeof window !== 'undefined' ? window.speechSynthesis : null,
+  voices: []
+};
+
+function initPodcastVoices() {
+  if (!podcastState.speechSynth) return;
+  podcastState.voices = podcastState.speechSynth.getVoices();
+  if (podcastState.speechSynth.onvoiceschanged !== undefined) {
+    podcastState.speechSynth.onvoiceschanged = () => {
+      podcastState.voices = podcastState.speechSynth.getVoices();
+    };
+  }
+}
+
+async function loadPodcastView() {
+  initPodcastVoices();
+  const episodesGrid = document.getElementById('podcast-episodes-grid');
+  if (episodesGrid && episodesGrid.children.length === 0) {
+    episodesGrid.innerHTML = `
+      <div class="col-span-3 p-6 text-center text-xs text-slate-500">
+        <div class="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+        <span>Loading audio episodes from lecture notes...</span>
+      </div>
+    `;
+  }
+
+  try {
+    const data = await api.getPodcasts();
+    podcastState.episodes = data.podcasts || [];
+    renderPodcastEpisodesGrid();
+
+    // Load first episode if none active
+    if (!podcastState.currentEpisode && podcastState.episodes.length > 0) {
+      loadPodcastEpisode(podcastState.episodes[0].id);
+    }
+  } catch (err) {
+    console.error("loadPodcastView error:", err);
+    showToast("Could not load audio episodes: " + err.message, "error");
+  }
+}
+
+function renderPodcastEpisodesGrid() {
+  const grid = document.getElementById('podcast-episodes-grid');
+  if (!grid || !podcastState.episodes) return;
+
+  grid.innerHTML = podcastState.episodes.map((ep, idx) => {
+    const isActive = podcastState.currentEpisode && podcastState.currentEpisode.id === ep.id;
+    const borderStyle = isActive ? 'border-indigo-600 bg-indigo-50/40 ring-2 ring-indigo-500/20' : 'border-slate-200 bg-white hover:border-indigo-300';
+
+    return `
+      <div onclick="loadPodcastEpisode('${ep.id}')" class="human-card p-4.5 border ${borderStyle} cursor-pointer transition-all duration-200 flex flex-col justify-between group shadow-xs">
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700">EPISODE ${idx + 1}</span>
+            <span class="text-xs font-mono text-slate-400 flex items-center gap-1">
+              <i data-lucide="clock" class="w-3 h-3"></i>
+              ${ep.duration_minutes}m
+            </span>
+          </div>
+          <h4 class="font-bold text-xs text-slate-900 group-hover:text-indigo-600 leading-snug transition">${escapeHtml(ep.title)}</h4>
+          <p class="text-[11px] text-slate-500 mt-1.5 line-clamp-2">${escapeHtml(ep.topic)}</p>
+        </div>
+
+        <div class="flex items-center justify-between pt-3 mt-3 border-t border-slate-100">
+          <div class="flex items-center -space-x-1.5">
+            <div class="w-6 h-6 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center border-2 border-white shadow-2xs">AR</div>
+            <div class="w-6 h-6 rounded-full bg-emerald-600 text-white text-[10px] font-bold flex items-center justify-center border-2 border-white shadow-2xs">JC</div>
+          </div>
+          <button class="px-2.5 py-1 rounded-lg text-xs font-semibold ${isActive ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700 group-hover:bg-indigo-50 group-hover:text-indigo-700'} flex items-center gap-1 transition">
+            <i data-lucide="${isActive && podcastState.isPlaying ? 'pause' : 'play'}" class="w-3 h-3"></i>
+            <span>${isActive && podcastState.isPlaying ? 'Playing' : 'Listen'}</span>
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  try { lucide.createIcons(); } catch (e) {}
+}
+
+function loadPodcastEpisode(podcastId) {
+  const ep = podcastState.episodes.find(e => e.id === podcastId);
+  if (!ep) return;
+
+  stopPodcastPlayback();
+
+  podcastState.currentEpisode = ep;
+  podcastState.currentTurnIndex = 0;
+
+  const titleEl = document.getElementById('podcast-active-title');
+  const badgeEl = document.getElementById('podcast-active-badge');
+  const durationEl = document.getElementById('podcast-active-duration');
+  const totalTimeEl = document.getElementById('podcast-total-time');
+
+  if (titleEl) titleEl.innerText = ep.title;
+  if (badgeEl) badgeEl.innerText = ep.topic ? ep.topic.toUpperCase() : 'DEEP DIVE';
+  if (durationEl) durationEl.innerText = `${ep.duration_minutes} min`;
+  if (totalTimeEl) totalTimeEl.innerText = `${Math.floor(ep.duration_minutes)}:${Math.round((ep.duration_minutes % 1) * 60).toString().padStart(2, '0')}`;
+
+  const chaptersList = document.getElementById('podcast-chapters-list');
+  if (chaptersList && ep.chapters) {
+    chaptersList.innerHTML = ep.chapters.map((ch, idx) => `
+      <button onclick="seekPodcastChapter(${idx})" class="px-2.5 py-1 text-[11px] rounded-lg bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-600 font-medium border border-slate-200 transition">
+        <span class="font-mono font-bold text-indigo-600">${ch.timestamp}</span>
+        <span class="ml-1">${escapeHtml(ch.title)}</span>
+      </button>
+    `).join('');
+  }
+
+  renderPodcastTranscript(ep.script);
+
+  const takeawaysList = document.getElementById('podcast-takeaways-list');
+  if (takeawaysList && ep.key_takeaways) {
+    takeawaysList.innerHTML = ep.key_takeaways.map(t => `
+      <li class="leading-relaxed"><strong class="font-semibold text-slate-900">${escapeHtml(t)}</strong></li>
+    `).join('');
+  }
+
+  updatePodcastProgressUI(0);
+  renderPodcastEpisodesGrid();
+}
+
+function renderPodcastTranscript(script) {
+  const container = document.getElementById('podcast-transcript-container');
+  if (!container || !script) return;
+
+  container.innerHTML = script.map((item, idx) => {
+    const isAlex = item.speaker === 'alex';
+    const bgStyle = isAlex ? 'bg-blue-50/50 border-blue-200/80' : 'bg-emerald-50/50 border-emerald-200/80';
+    const avatarBg = isAlex ? 'bg-blue-600 text-white' : 'bg-emerald-600 text-white';
+    const speakerLabel = isAlex ? 'Dr. Alex Rivera (Lead Explainer)' : 'Jordan Chen (Co-Host)';
+    const initial = isAlex ? 'AR' : 'JC';
+
+    return `
+      <div id="podcast-turn-${idx}" onclick="playPodcastTurn(${idx})" class="p-3.5 rounded-xl border ${bgStyle} cursor-pointer transition-all duration-200 hover:scale-[1.01] hover:shadow-xs group">
+        <div class="flex items-center justify-between mb-1.5">
+          <div class="flex items-center gap-2">
+            <div class="w-6 h-6 rounded-lg ${avatarBg} text-[10px] font-bold flex items-center justify-center shadow-2xs">${initial}</div>
+            <span class="text-xs font-bold text-slate-900">${speakerLabel}</span>
+          </div>
+          <span class="text-[10px] font-mono text-slate-400 group-hover:text-indigo-600 flex items-center gap-1">
+            <i data-lucide="play" class="w-2.5 h-2.5"></i>
+            Turn ${idx + 1}
+          </span>
+        </div>
+        <p class="text-xs text-slate-700 leading-relaxed pl-8 notes-prose">${escapeHtml(item.text)}</p>
+      </div>
+    `;
+  }).join('');
+
+  try { lucide.createIcons(); } catch (e) {}
+}
+
+function togglePodcastPlay() {
+  if (!podcastState.currentEpisode) return;
+
+  if (podcastState.isPlaying) {
+    pausePodcastPlayback();
+  } else {
+    playPodcastTurn(podcastState.currentTurnIndex);
+  }
+}
+
+function playPodcastTurn(turnIndex) {
+  if (!podcastState.currentEpisode || !podcastState.currentEpisode.script) return;
+  const script = podcastState.currentEpisode.script;
+
+  if (turnIndex < 0 || turnIndex >= script.length) {
+    stopPodcastPlayback();
+    return;
+  }
+
+  podcastState.currentTurnIndex = turnIndex;
+  podcastState.isPlaying = true;
+  updatePodcastPlayButtonIcon(true);
+
+  const turn = script[turnIndex];
+  const isAlex = turn.speaker === 'alex';
+
+  const hostAlex = document.getElementById('host-card-alex');
+  const dotAlex = document.getElementById('host-active-dot-alex');
+  const hostJordan = document.getElementById('host-card-jordan');
+  const dotJordan = document.getElementById('host-active-dot-jordan');
+
+  if (isAlex) {
+    if (hostAlex) hostAlex.classList.add('host-speaking');
+    if (dotAlex) dotAlex.classList.remove('hidden');
+    if (hostJordan) hostJordan.classList.remove('host-speaking');
+    if (dotJordan) dotJordan.classList.add('hidden');
+  } else {
+    if (hostJordan) hostJordan.classList.add('host-speaking');
+    if (dotJordan) dotJordan.classList.remove('hidden');
+    if (hostAlex) hostAlex.classList.remove('host-speaking');
+    if (dotAlex) dotAlex.classList.add('hidden');
+  }
+
+  document.querySelectorAll('[id^="podcast-turn-"]').forEach(el => el.classList.remove('podcast-turn-active'));
+  const activeTurnEl = document.getElementById(`podcast-turn-${turnIndex}`);
+  if (activeTurnEl) {
+    activeTurnEl.classList.add('podcast-turn-active');
+    activeTurnEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  updatePodcastProgressUI(turnIndex);
+
+  if (podcastState.speechSynth) {
+    podcastState.speechSynth.cancel();
+
+    const cleanSpeech = turn.text
+      .replace(/\$+/g, '')
+      .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '$1 over $2')
+      .replace(/\\times/g, 'times')
+      .replace(/\\cdot/g, 'times')
+      .replace(/\\[a-zA-Z]+/g, '')
+      .replace(/\{|\}/g, '');
+
+    const utterance = new SpeechSynthesisUtterance(cleanSpeech);
+    utterance.rate = (isAlex ? 1.0 : 1.05) * podcastState.playbackSpeed;
+    utterance.pitch = isAlex ? 0.95 : 1.15;
+
+    const voices = podcastState.voices || (podcastState.speechSynth.getVoices ? podcastState.speechSynth.getVoices() : []);
+    if (voices.length > 0) {
+      if (isAlex) {
+        const alexVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('David') || v.name.includes('George') || v.name.includes('Male') || v.name.includes('Daniel') || v.name.includes('Guy')));
+        if (alexVoice) utterance.voice = alexVoice;
+      } else {
+        const jordanVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Zira') || v.name.includes('Jenny') || v.name.includes('Female') || v.name.includes('Aria') || v.name.includes('Samantha')));
+        if (jordanVoice) utterance.voice = jordanVoice;
+      }
+    }
+
+    utterance.onend = () => {
+      if (podcastState.isPlaying) {
+        if (turnIndex + 1 < script.length) {
+          setTimeout(() => {
+            if (podcastState.isPlaying) {
+              playPodcastTurn(turnIndex + 1);
+            }
+          }, 350);
+        } else {
+          stopPodcastPlayback();
+          showToast("🎉 Audio Overview complete! (+35 XP Awarded)", "success");
+          triggerConfetti();
+          playSuccessChime();
+        }
+      }
+    };
+
+    utterance.onerror = (e) => {
+      console.warn("Speech synthesis error on podcast turn:", e);
+    };
+
+    podcastState.speechSynth.speak(utterance);
+  }
+}
+
+function pausePodcastPlayback() {
+  podcastState.isPlaying = false;
+  if (podcastState.speechSynth) {
+    podcastState.speechSynth.cancel();
+  }
+  updatePodcastPlayButtonIcon(false);
+
+  const hostAlex = document.getElementById('host-card-alex');
+  const dotAlex = document.getElementById('host-active-dot-alex');
+  const hostJordan = document.getElementById('host-card-jordan');
+  const dotJordan = document.getElementById('host-active-dot-jordan');
+  if (hostAlex) hostAlex.classList.remove('host-speaking');
+  if (dotAlex) dotAlex.classList.add('hidden');
+  if (hostJordan) hostJordan.classList.remove('host-speaking');
+  if (dotJordan) dotJordan.classList.add('hidden');
+}
+
+function stopPodcastPlayback() {
+  pausePodcastPlayback();
+  podcastState.currentTurnIndex = 0;
+  updatePodcastProgressUI(0);
+}
+
+function jumpPodcastTurn(delta) {
+  if (!podcastState.currentEpisode || !podcastState.currentEpisode.script) return;
+  const script = podcastState.currentEpisode.script;
+  const newIndex = Math.max(0, Math.min(podcastState.currentTurnIndex + delta, script.length - 1));
+  playPodcastTurn(newIndex);
+}
+
+function seekPodcastChapter(chapterIndex) {
+  if (!podcastState.currentEpisode || !podcastState.currentEpisode.chapters) return;
+  const script = podcastState.currentEpisode.script;
+  const turnIndex = Math.min(Math.floor((chapterIndex / podcastState.currentEpisode.chapters.length) * script.length), script.length - 1);
+  playPodcastTurn(turnIndex);
+}
+
+function seekPodcastClick(event) {
+  if (!podcastState.currentEpisode || !podcastState.currentEpisode.script) return;
+  const container = document.getElementById('podcast-progress-bar-container');
+  if (!container) return;
+
+  const rect = container.getBoundingClientRect();
+  const clickX = event.clientX - rect.left;
+  const ratio = Math.max(0, Math.min(clickX / rect.width, 1));
+  const script = podcastState.currentEpisode.script;
+  const targetTurn = Math.min(Math.floor(ratio * script.length), script.length - 1);
+  playPodcastTurn(targetTurn);
+}
+
+function cyclePodcastSpeed() {
+  const speeds = [1.0, 1.25, 1.5, 1.75];
+  const currentIdx = speeds.indexOf(podcastState.playbackSpeed);
+  const nextIdx = (currentIdx + 1) % speeds.length;
+  podcastState.playbackSpeed = speeds[nextIdx];
+
+  const speedBtn = document.getElementById('podcast-speed-btn');
+  if (speedBtn) speedBtn.innerText = `${podcastState.playbackSpeed.toFixed(2)}x Speed`;
+  showToast(`Playback speed set to ${podcastState.playbackSpeed}x`, "info");
+
+  if (podcastState.isPlaying) {
+    playPodcastTurn(podcastState.currentTurnIndex);
+  }
+}
+
+function updatePodcastPlayButtonIcon(isPlaying) {
+  const icon = document.getElementById('podcast-play-icon');
+  if (!icon) return;
+  icon.setAttribute('data-lucide', isPlaying ? 'pause' : 'play');
+  try { lucide.createIcons(); } catch (e) {}
+}
+
+function updatePodcastProgressUI(turnIndex) {
+  if (!podcastState.currentEpisode || !podcastState.currentEpisode.script) return;
+  const script = podcastState.currentEpisode.script;
+  const totalTurns = script.length;
+
+  const progressPercent = Math.min(100, Math.round(((turnIndex + 1) / totalTurns) * 100));
+  const fill = document.getElementById('podcast-progress-fill');
+  if (fill) fill.style.width = `${progressPercent}%`;
+
+  const turnIndicator = document.getElementById('podcast-turn-indicator');
+  if (turnIndicator) turnIndicator.innerText = `Turn ${turnIndex + 1} of ${totalTurns}`;
+
+  const totalSeconds = (podcastState.currentEpisode.duration_minutes || 4.5) * 60;
+  const currentSeconds = Math.round((turnIndex / totalTurns) * totalSeconds);
+  const curM = Math.floor(currentSeconds / 60);
+  const curS = (currentSeconds % 60).toString().padStart(2, '0');
+  const curTimeEl = document.getElementById('podcast-current-time');
+  if (curTimeEl) curTimeEl.innerText = `${curM}:${curS}`;
+}
+
+function generateCustomPodcastModal() {
+  const modal = document.getElementById('podcast-generate-modal');
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closePodcastGenerateModal() {
+  const modal = document.getElementById('podcast-generate-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+async function submitCustomPodcastGeneration() {
+  const input = document.getElementById('custom-podcast-topic-input');
+  const topic = input ? input.value.trim() : 'Core Course Concepts';
+  const btn = document.getElementById('podcast-generate-submit-btn');
+
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<div class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div><span>Synthesizing...</span>`;
+  }
+
+  try {
+    const newPodcast = await api.generatePodcast(topic);
+    closePodcastGenerateModal();
+
+    podcastState.episodes.unshift(newPodcast);
+    renderPodcastEpisodesGrid();
+    loadPodcastEpisode(newPodcast.id);
+
+    showToast(`⚡ New Audio Overview Generated: "${newPodcast.title}" (+35 XP)`, "success");
+    playSuccessChime();
+    triggerConfetti();
+    await refreshGamificationUI();
+
+    setTimeout(() => {
+      playPodcastTurn(0);
+    }, 600);
+  } catch (err) {
+    showToast("Generation error: " + err.message, "error");
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `<i data-lucide="headphones" class="w-4 h-4"></i><span>Synthesize Episode</span>`;
+      try { lucide.createIcons(); } catch (e) {}
+    }
+  }
+}
+
+function downloadPodcastNotes() {
+  if (!podcastState.currentEpisode) return;
+  const ep = podcastState.currentEpisode;
+
+  let textContent = `# ${ep.title}\nTopic: ${ep.topic}\nDuration: ${ep.duration_minutes} minutes\n\n`;
+  textContent += `## Key Takeaways\n`;
+  (ep.key_takeaways || []).forEach(t => textContent += `- ${t}\n`);
+  textContent += `\n## Full Conversational Transcript\n\n`;
+  (ep.script || []).forEach(s => textContent += `[${s.speaker_name}]: ${s.text}\n\n`);
+
+  const blob = new Blob([textContent], { type: 'text/markdown' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${ep.id}_notes.md`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast("Downloaded podcast study notes as Markdown", "success");
 }
 
