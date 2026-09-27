@@ -217,28 +217,5 @@ const api = {
     }
     return res.json();
   },
-
-  async getPodcasts() {
-    const res = await fetch(`${API_BASE}/api/podcasts`);
-    return res.json();
-  },
-
-  async getPodcast(podcastId) {
-    const res = await fetch(`${API_BASE}/api/podcasts/${encodeURIComponent(podcastId)}`);
-    return res.json();
-  },
-
-  async generatePodcast(topic = "all", docIds = null) {
-    const res = await fetch(`${API_BASE}/api/podcast/generate`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ topic, doc_ids: docIds })
-    });
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.detail || "Failed to generate audio overview");
-    }
-    return res.json();
-  }
 };
 
