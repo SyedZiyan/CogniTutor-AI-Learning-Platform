@@ -59,23 +59,31 @@
         <div class="flex flex-col">
           <div class="flex items-center gap-1.5">
             <span class="font-extrabold text-slate-900 text-base tracking-tight leading-none">Cogni<span class="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500 bg-clip-text text-transparent">Tutor</span></span>
-            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold font-mono bg-blue-50 text-blue-700 border border-blue-200/80 leading-none shadow-xs">AI</span>
+            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold font-mono bg-blue-50 text-blue-700 border border-blue-200/80 leading-none shadow-xs">PRO</span>
           </div>
-          <span class="text-[10px] text-slate-400 font-medium tracking-tight">Personal Learning Copilot</span>
+          <span class="text-[10px] text-slate-400 font-medium tracking-tight">Adaptive Neural Copilot</span>
         </div>
       </div>
 
       <div class="h-4 w-[1px] bg-slate-200 hidden sm:block"></div>
 
       <!-- Active Course Pill -->
-      <div class="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-white/70 backdrop-blur-md text-slate-700 text-xs font-semibold border border-slate-200/80 shadow-xs">
-        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-        <span>Course: Deep Learning & Neural Networks</span>
+      <div class="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-white/75 backdrop-blur-md text-slate-700 text-xs font-semibold border border-slate-200/80 shadow-xs">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 status-beacon-pulse"></span>
+        <span class="truncate max-w-[200px] md:max-w-none">Deep Learning & Neural Networks</span>
+        <span class="px-1.5 py-0.2 rounded text-[9px] font-bold font-mono bg-emerald-50 text-emerald-700 border border-emerald-200/80 uppercase">Active</span>
       </div>
     </div>
 
     <!-- Student Stats & Quick Actions -->
     <div class="flex items-center gap-3 sm:gap-4">
+      <!-- Quick Command Search Trigger -->
+      <button onclick="openCommandPalette()" class="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100/80 hover:bg-slate-200/80 text-slate-500 hover:text-slate-800 border border-slate-200/80 text-xs transition cursor-pointer shadow-2xs" title="Open Quick Command Palette (Ctrl+K)">
+        <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400"></i>
+        <span class="text-[11px] font-medium">Quick Find & Actions...</span>
+        <kbd class="px-1.5 py-0.5 rounded bg-white text-[10px] font-mono border border-slate-300 font-bold text-slate-500 shadow-2xs">Ctrl K</kbd>
+      </button>
+
       <!-- Voice Playing Pill -->
       <div class="audio-wave-container hidden items-center gap-1.5 px-3 py-1 rounded-full border">
         <div class="human-wave-bar"></div>
@@ -108,7 +116,7 @@
         <span>Add Notes</span>
       </button>
 
-      <!-- Theme Switcher (Dark Glass / Light Glass) -->
+      <!-- Theme Switcher (Obsidian Dark Glass / Frosted Light Glass) -->
       <button onclick="toggleTheme()" id="theme-toggle-btn" title="Toggle Dark/Light Glass Mode" class="w-8 h-8 rounded-lg bg-white/80 hover:bg-white text-slate-700 border border-slate-200/80 backdrop-blur-md flex items-center justify-center transition shadow-xs">
         <i data-lucide="moon" id="theme-toggle-icon" class="w-4 h-4"></i>
       </button>
@@ -124,12 +132,13 @@
   <nav class="glass-nav px-6 py-1.5 flex items-center gap-1.5 overflow-x-auto text-sm sticky top-[57px] z-20">
     <button data-tab-target="dashboard" class="nav-tab-btn active">
       <i data-lucide="layout-grid" class="w-4 h-4"></i>
-      <span>Overview & Weak Spots</span>
+      <span>Overview & Diagnostics</span>
     </button>
 
     <button data-tab-target="tutor" class="nav-tab-btn">
       <i data-lucide="message-square" class="w-4 h-4"></i>
-      <span>Ask My Notes (Q&A)</span>
+      <span>Ask Notes (Q&A)</span>
+      <span class="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-blue-100/70 text-blue-700 border border-blue-200">RAG</span>
     </button>
 
     <button data-tab-target="doubt" class="nav-tab-btn">
@@ -140,6 +149,7 @@
     <button data-tab-target="quiz" class="nav-tab-btn">
       <i data-lucide="check-square" class="w-4 h-4"></i>
       <span>Practice Quiz</span>
+      <span class="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-amber-100/70 text-amber-700 border border-amber-200">Adaptive</span>
     </button>
 
     <button data-tab-target="roadmap" class="nav-tab-btn">
@@ -150,11 +160,13 @@
     <button data-tab-target="graph" class="nav-tab-btn">
       <i data-lucide="network" class="w-4 h-4"></i>
       <span>Concept Graph</span>
+      <span class="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-purple-100/70 text-purple-700 border border-purple-200">DAG</span>
     </button>
 
     <button data-tab-target="viva" class="nav-tab-btn">
       <i data-lucide="mic" class="w-4 h-4 text-rose-600"></i>
       <span>Socratic Viva</span>
+      <span class="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-rose-100/70 text-rose-700 border border-rose-200">Voice</span>
     </button>
 
     <button data-tab-target="documents" class="nav-tab-btn">
@@ -1082,6 +1094,34 @@
         <button onclick="savePlatformSettings()" class="btn-primary-shimmer w-full py-2.5 rounded-xl text-white font-semibold text-xs transition">
           Save Preferences
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMMAND PALETTE MODAL (Ctrl + K) -->
+  <div id="cmd-palette-modal" class="fixed inset-0 bg-slate-950/50 backdrop-blur-md z-50 flex items-start justify-center pt-24 p-4 hidden" onclick="if(event.target===this) closeCommandPalette()">
+    <div class="cmd-palette-box rounded-2xl w-full max-w-xl flex flex-col shadow-2xl overflow-hidden border border-slate-200/90 bg-white">
+      <!-- Search input header -->
+      <div class="p-3.5 border-b border-slate-200/80 flex items-center gap-3 bg-white">
+        <i data-lucide="search" class="w-4 h-4 text-slate-400 shrink-0"></i>
+        <input type="text" id="cmd-palette-input" placeholder="Search commands, navigate tabs, or ask concepts (e.g. 'LSTM', 'CNN')..." class="w-full text-sm bg-transparent border-none focus:outline-none text-slate-800 placeholder-slate-400" onkeydown="handleCmdKeyDown(event)" oninput="filterCmdList()">
+        <button onclick="closeCommandPalette()" class="p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition">
+          <kbd class="px-1.5 py-0.5 rounded bg-slate-100 text-[10px] font-mono border border-slate-200">ESC</kbd>
+        </button>
+      </div>
+
+      <!-- Quick items list -->
+      <div id="cmd-palette-results" class="p-2 max-h-80 overflow-y-auto space-y-1">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <!-- Footer navigation info -->
+      <div class="px-4 py-2.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500 font-medium">
+        <div class="flex items-center gap-3">
+          <span><kbd class="px-1 py-0.2 rounded bg-white border border-slate-200 font-mono text-[10px]">↑</kbd> <kbd class="px-1 py-0.2 rounded bg-white border border-slate-200 font-mono text-[10px]">↓</kbd> Navigate</span>
+          <span><kbd class="px-1.5 py-0.2 rounded bg-white border border-slate-200 font-mono text-[10px]">↵</kbd> Select</span>
+        </div>
+        <span class="text-blue-600 font-mono">CogniTutor Pro Navigation</span>
       </div>
     </div>
   </div>

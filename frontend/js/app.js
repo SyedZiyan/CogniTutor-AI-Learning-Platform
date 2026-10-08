@@ -116,6 +116,9 @@ function toggleTheme() {
   localStorage.setItem('cogni_theme', isDark ? 'dark' : 'light');
   updateThemeIcon();
   showToast(isDark ? "🌙 Obsidian Dark Glass Mode activated" : "☀️ Frosted Light Glass Mode activated", "info");
+  if (appState.activeTab === 'dashboard') {
+    refreshDashboard();
+  }
 }
 
 function updateThemeIcon() {
@@ -124,6 +127,210 @@ function updateThemeIcon() {
   const isDark = document.body.classList.contains('dark-theme');
   icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
   lucide.createIcons();
+}
+
+// ==========================================================================
+// Code Block Beautifier & One-Click Copy
+// ==========================================================================
+function enhanceCodeBlocks(container) {
+  if (!container) return;
+  const preElements = container.querySelectorAll('pre');
+  preElements.forEach(pre => {
+    if (pre.parentElement && pre.parentElement.classList.contains('code-block-wrapper')) return;
+    
+    const codeEl = pre.querySelector('code');
+    let lang = 'code';
+    if (codeEl && codeEl.className) {
+      const match = codeEl.className.match(/language-(\w+)/);
+      if (match) lang = match[1];
+    }
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'code-block-wrapper';
+    
+    const header = document.createElement('div');
+    header.className = 'code-header';
+    header.innerHTML = `
+      <div class="code-header-dots">
+        <span></span><span></span><span></span>
+        <span class="ml-2 font-mono text-[10px] text-slate-400 uppercase font-semibold">${lang}</span>
+      </div>
+      <button class="copy-code-btn" title="Copy snippet">
+        <i data-lucide="copy" class="w-3 h-3"></i>
+        <span>Copy</span>
+      </button>
+    `;
+    
+    pre.parentNode.insertBefore(wrapper, pre);
+    wrapper.appendChild(header);
+    wrapper.appendChild(pre);
+    
+    const copyBtn = header.querySelector('.copy-code-btn');
+    if (copyBtn) {
+      copyBtn.addEventListener('click', async () => {
+        const textToCopy = pre.innerText;
+        try {
+          await navigator.clipboard.writeText(textToCopy);
+          copyBtn.innerHTML = `<i data-lucide="check" class="w-3 h-3 text-emerald-400"></i><span class="text-emerald-400 font-semibold">Copied!</span>`;
+          if (typeof lucide !== 'undefined') lucide.createIcons({ root: copyBtn });
+          setTimeout(() => {
+            copyBtn.innerHTML = `<i data-lucide="copy" class="w-3 h-3"></i><span>Copy</span>`;
+            if (typeof lucide !== 'undefined') lucide.createIcons({ root: copyBtn });
+          }, 2000);
+        } catch (e) {
+          showToast("Copied to clipboard", "info");
+        }
+      });
+    }
+  });
+  if (typeof lucide !== 'undefined') lucide.createIcons({ root: container });
+}
+
+// ==========================================================================
+// Command Palette (Ctrl + K) Controller
+// ==========================================================================
+const commandPaletteItems = [
+  // Navigation tabs
+  { id: 'tab-dash', title: 'Go to Overview & Diagnostics', category: 'Navigation', icon: 'layout-grid', action: () => switchTab('dashboard'), keywords: 'overview weak spots dashboard metrics diagnostics' },
+  { id: 'tab-tutor', title: 'Go to Ask Notes (Q&A Copilot)', category: 'Navigation', icon: 'message-square', action: () => switchTab('tutor'), keywords: 'ask tutor chat notes q&a rag split pdf' },
+  { id: 'tab-doubt', title: 'Go to Explain Simply (3 Levels)', category: 'Navigation', icon: 'help-circle', action: () => switchTab('doubt'), keywords: 'explain concept simplify doubt intuition mechanics code' },
+  { id: 'tab-quiz', title: 'Go to Practice Quiz & Assessment', category: 'Navigation', icon: 'check-square', action: () => switchTab('quiz'), keywords: 'quiz test practice mcq questions adaptive' },
+  { id: 'tab-roadmap', title: 'Go to Personalized Study Plan', category: 'Navigation', icon: 'map', action: () => switchTab('roadmap'), keywords: 'study plan roadmap syllabus weeks prerequisites' },
+  { id: 'tab-graph', title: 'Go to Concept Knowledge Graph', category: 'Navigation', icon: 'network', action: () => switchTab('graph'), keywords: 'knowledge graph concepts ontology dag nodes relations' },
+  { id: 'tab-viva', title: 'Go to Socratic Oral Viva Exam', category: 'Navigation', icon: 'mic', action: () => switchTab('viva'), keywords: 'viva oral exam voice turing socratic interview speech' },
+  { id: 'tab-docs', title: 'Go to My Study Materials', category: 'Navigation', icon: 'folder', action: () => switchTab('documents'), keywords: 'materials documents upload library pdf notes' },
+  { id: 'tab-lead', title: 'Go to Leaderboard & Badges', category: 'Navigation', icon: 'award', action: () => switchTab('achievements'), keywords: 'leaderboard badges xp achievements streak level' },
+
+  // Quick Concept Explanations
+  { id: 'topic-lstm', title: 'Explain: LSTM Memory Cells', category: 'Concept Deep Dive', icon: 'sparkles', action: () => { switchTab('doubt'); triggerDoubtSolver('lstm'); }, keywords: 'lstm memory cells gates forget input candidate output' },
+  { id: 'topic-backprop', title: 'Explain: Backpropagation Chain Rule', category: 'Concept Deep Dive', icon: 'sparkles', action: () => { switchTab('doubt'); triggerDoubtSolver('backpropagation'); }, keywords: 'backpropagation chain rule gradient descent weights optimization' },
+  { id: 'topic-cnn', title: 'Explain: CNN Convolutions & Feature Maps', category: 'Concept Deep Dive', icon: 'sparkles', action: () => { switchTab('doubt'); triggerDoubtSolver('cnn'); }, keywords: 'cnn convolutional kernels pooling padding lenet resnet' },
+  { id: 'topic-transformer', title: 'Explain: Transformer Self-Attention', category: 'Concept Deep Dive', icon: 'sparkles', action: () => { switchTab('doubt'); triggerDoubtSolver('transformers'); }, keywords: 'transformers attention query key value scaled dot' },
+  { id: 'topic-overfit', title: 'Explain: Overfitting & Regularization', category: 'Concept Deep Dive', icon: 'sparkles', action: () => { switchTab('doubt'); triggerDoubtSolver('overfitting'); }, keywords: 'overfitting regularization dropout weight decay l2 validation' },
+
+  // Quick Actions
+  { id: 'act-quiz', title: 'Start Adaptive Practice Quiz Now', category: 'Quick Action', icon: 'play', action: () => { switchTab('quiz'); const btn = document.getElementById('start-quiz-btn'); if (btn) btn.click(); }, keywords: 'start quiz test adaptive generate' },
+  { id: 'act-viva', title: 'Begin Socratic Oral Viva Defense', category: 'Quick Action', icon: 'mic', action: () => { switchTab('viva'); startNewVivaSession(); }, keywords: 'begin oral viva exam defense prof turing' },
+  { id: 'act-theme', title: 'Toggle Obsidian Dark / Frosted Light Theme', category: 'Quick Action', icon: 'moon', action: () => toggleTheme(), keywords: 'theme dark light mode obsidian toggle' },
+  { id: 'act-settings', title: 'Open Settings & Preferences', category: 'Quick Action', icon: 'settings-2', action: () => toggleSettingsDrawer(), keywords: 'settings preferences llm model gemini openai api' }
+];
+
+let selectedCmdIndex = 0;
+let currentFilteredCmds = [];
+
+function openCommandPalette() {
+  const modal = document.getElementById('cmd-palette-modal');
+  const input = document.getElementById('cmd-palette-input');
+  if (!modal || !input) return;
+  modal.classList.remove('hidden');
+  input.value = '';
+  filterCmdList();
+  setTimeout(() => input.focus(), 60);
+}
+
+function closeCommandPalette() {
+  const modal = document.getElementById('cmd-palette-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function filterCmdList() {
+  const input = document.getElementById('cmd-palette-input');
+  const query = (input ? input.value : '').toLowerCase().trim();
+  const resultsContainer = document.getElementById('cmd-palette-results');
+  if (!resultsContainer) return;
+
+  currentFilteredCmds = commandPaletteItems.filter(item => {
+    if (!query) return true;
+    return item.title.toLowerCase().includes(query) ||
+           item.category.toLowerCase().includes(query) ||
+           item.keywords.toLowerCase().includes(query);
+  });
+
+  selectedCmdIndex = 0;
+  renderCmdPaletteItems();
+}
+
+function renderCmdPaletteItems() {
+  const container = document.getElementById('cmd-palette-results');
+  if (!container) return;
+
+  if (currentFilteredCmds.length === 0) {
+    container.innerHTML = `
+      <div class="p-6 text-center text-slate-400 text-xs">
+        <i data-lucide="help-circle" class="w-6 h-6 mx-auto mb-2 text-slate-300"></i>
+        <p>No matching commands or topics found.</p>
+        <p class="text-[11px] text-slate-400 mt-1">Try searching for "LSTM", "Quiz", "Viva", or "Settings"</p>
+      </div>
+    `;
+    if (typeof lucide !== 'undefined') lucide.createIcons({ root: container });
+    return;
+  }
+
+  let html = '';
+  let lastCategory = '';
+
+  currentFilteredCmds.forEach((item, idx) => {
+    if (item.category !== lastCategory) {
+      lastCategory = item.category;
+      html += `<div class="px-3 pt-2.5 pb-1 text-[10px] font-bold font-mono uppercase tracking-wider text-slate-400">${lastCategory}</div>`;
+    }
+    const isSelected = idx === selectedCmdIndex;
+    html += `
+      <div onclick="executeCmdItem(${idx})" class="cmd-item ${isSelected ? 'selected' : ''}" data-cmd-idx="${idx}">
+        <div class="flex items-center gap-2.5 truncate">
+          <i data-lucide="${item.icon}" class="w-4 h-4 text-blue-600 shrink-0"></i>
+          <span class="font-medium text-xs text-slate-800 dark:text-slate-200 truncate">${item.title}</span>
+        </div>
+        <span class="text-[10px] font-mono text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 shrink-0">↵</span>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+  if (typeof lucide !== 'undefined') lucide.createIcons({ root: container });
+
+  const selectedEl = container.querySelector('.cmd-item.selected');
+  if (selectedEl) selectedEl.scrollIntoView({ block: 'nearest' });
+}
+
+function handleCmdKeyDown(e) {
+  if (e.key === 'Escape') {
+    closeCommandPalette();
+    return;
+  }
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    if (currentFilteredCmds.length > 0) {
+      selectedCmdIndex = (selectedCmdIndex + 1) % currentFilteredCmds.length;
+      renderCmdPaletteItems();
+    }
+    return;
+  }
+  if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (currentFilteredCmds.length > 0) {
+      selectedCmdIndex = (selectedCmdIndex - 1 + currentFilteredCmds.length) % currentFilteredCmds.length;
+      renderCmdPaletteItems();
+    }
+    return;
+  }
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    if (currentFilteredCmds[selectedCmdIndex]) {
+      executeCmdItem(selectedCmdIndex);
+    }
+  }
+}
+
+function executeCmdItem(idx) {
+  const item = currentFilteredCmds[idx];
+  if (!item) return;
+  closeCommandPalette();
+  try {
+    item.action();
+  } catch (e) {
+    console.error("Command execution error:", e);
+  }
 }
 
 // Initialize App
@@ -135,6 +342,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupUpload();
   setupDoubtSolver();
   setupQuizControls();
+
+  // Global shortcut for Ctrl+K / Cmd+K
+  window.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      const modal = document.getElementById('cmd-palette-modal');
+      if (modal && !modal.classList.contains('hidden')) {
+        closeCommandPalette();
+      } else {
+        openCommandPalette();
+      }
+    }
+  });
 
   // Load initial data
   await refreshGamificationUI();
@@ -192,6 +412,16 @@ async function refreshDashboard() {
       api.getDocuments()
     ]);
 
+    // Dynamic greeting based on time of day
+    const hour = new Date().getHours();
+    let greeting = "Good evening";
+    if (hour >= 5 && hour < 12) greeting = "Good morning";
+    else if (hour >= 12 && hour < 17) greeting = "Good afternoon";
+    const greetingHeader = document.querySelector('#view-dashboard h2');
+    if (greetingHeader) {
+      greetingHeader.innerText = `${greeting}! Here is your personalized learning progress for today.`;
+    }
+
     // Update Top Overview Cards
     document.getElementById('dash-overall-progress').innerText = `${comp.overall_mastery}%`;
     document.getElementById('dash-strongest-topic').innerText = comp.strongest_topic;
@@ -229,17 +459,21 @@ function renderCompetencyBreakdown(comp) {
   // Strong topics
   comp.strong.forEach(t => {
     html += `
-      <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
-        <div>
-          <div class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-            <span class="font-semibold text-xs text-slate-800">${t.topic}</span>
+      <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/80 hover:border-emerald-300 transition gap-3">
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+            <span class="font-bold text-xs text-slate-800 dark:text-slate-200 truncate">${escapeHtml(t.topic)}</span>
+            <span class="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">STRONG</span>
           </div>
-          <p class="text-[11px] text-slate-500 mt-0.5">${t.description}</p>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate">${escapeHtml(t.description)}</p>
+          <div class="mt-1.5 w-full bg-slate-200/70 dark:bg-slate-700/60 h-1.5 rounded-full overflow-hidden">
+            <div class="bg-emerald-500 h-full rounded-full" style="width: ${t.score}%;"></div>
+          </div>
         </div>
-        <div class="text-right">
-          <span class="text-xs font-bold text-emerald-700">${t.score}%</span>
-          <span class="block text-[10px] uppercase font-bold text-emerald-600">Strong</span>
+        <div class="text-right shrink-0">
+          <span class="text-xs font-bold font-mono text-emerald-700 dark:text-emerald-400">${t.score}%</span>
+          <button onclick="switchTab('quiz')" class="mt-1 block text-[10px] text-blue-600 hover:underline font-semibold">Test</button>
         </div>
       </div>
     `;
@@ -248,17 +482,21 @@ function renderCompetencyBreakdown(comp) {
   // Average topics
   comp.average.forEach(t => {
     html += `
-      <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
-        <div>
-          <div class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-            <span class="font-semibold text-xs text-slate-800">${t.topic}</span>
+      <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/80 hover:border-amber-300 transition gap-3">
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="w-2 h-2 rounded-full bg-amber-500 shrink-0"></span>
+            <span class="font-bold text-xs text-slate-800 dark:text-slate-200 truncate">${escapeHtml(t.topic)}</span>
+            <span class="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-amber-50 text-amber-700 border border-amber-200">AVERAGE</span>
           </div>
-          <p class="text-[11px] text-slate-500 mt-0.5">${t.description}</p>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate">${escapeHtml(t.description)}</p>
+          <div class="mt-1.5 w-full bg-slate-200/70 dark:bg-slate-700/60 h-1.5 rounded-full overflow-hidden">
+            <div class="bg-amber-500 h-full rounded-full" style="width: ${t.score}%;"></div>
+          </div>
         </div>
-        <div class="text-right">
-          <span class="text-xs font-bold text-amber-700">${t.score}%</span>
-          <span class="block text-[10px] uppercase font-bold text-amber-600">Average</span>
+        <div class="text-right shrink-0">
+          <span class="text-xs font-bold font-mono text-amber-700 dark:text-amber-400">${t.score}%</span>
+          <button onclick="handleRecommendationClick('${escapeHtml(t.topic)}')" class="mt-1 block text-[10px] text-blue-600 hover:underline font-semibold">Review</button>
         </div>
       </div>
     `;
@@ -267,17 +505,21 @@ function renderCompetencyBreakdown(comp) {
   // Weak topics
   comp.weak.forEach(t => {
     html += `
-      <div class="flex items-center justify-between p-3 rounded-xl bg-rose-50/60 border border-rose-200">
-        <div>
-          <div class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-rose-500"></span>
-            <span class="font-semibold text-xs text-slate-800">${t.topic}</span>
+      <div class="flex items-center justify-between p-3 rounded-xl bg-rose-50/60 dark:bg-rose-950/20 border border-rose-200/80 dark:border-rose-900/50 hover:border-rose-400 transition gap-3">
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="w-2 h-2 rounded-full bg-rose-500 shrink-0 animate-pulse"></span>
+            <span class="font-bold text-xs text-slate-800 dark:text-slate-200 truncate">${escapeHtml(t.topic)}</span>
+            <span class="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-rose-100 text-rose-800 border border-rose-200">NEEDS FOCUS</span>
           </div>
-          <p class="text-[11px] text-slate-500 mt-0.5">${t.description}</p>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate">${escapeHtml(t.description)}</p>
+          <div class="mt-1.5 w-full bg-slate-200/70 dark:bg-slate-700/60 h-1.5 rounded-full overflow-hidden">
+            <div class="bg-rose-500 h-full rounded-full" style="width: ${t.score}%;"></div>
+          </div>
         </div>
-        <div class="text-right">
-          <span class="text-xs font-bold text-rose-700">${t.score}%</span>
-          <span class="block text-[10px] uppercase font-bold text-rose-600">Needs Work</span>
+        <div class="text-right shrink-0">
+          <span class="text-xs font-bold font-mono text-rose-700 dark:text-rose-400">${t.score}%</span>
+          <button onclick="handleRecommendationClick('${escapeHtml(t.topic)}')" class="mt-1 px-2.5 py-0.5 rounded text-[10px] bg-rose-600 hover:bg-rose-700 text-white font-semibold transition shadow-2xs">Drill</button>
         </div>
       </div>
     `;
@@ -297,21 +539,21 @@ function renderRecommendations(recs) {
 
   container.innerHTML = recs.map(r => {
     const isHigh = r.priority === 'HIGH';
-    const borderStyle = isHigh ? 'border-rose-200 bg-rose-50/40' : 'border-slate-200 bg-white';
-    const tagStyle = isHigh ? 'bg-rose-100 text-rose-800 border-rose-200' : 'bg-blue-100 text-blue-800 border-blue-200';
+    const borderStyle = isHigh ? 'border-rose-200/90 bg-rose-50/40 dark:bg-rose-950/20' : 'border-slate-200/90 bg-white dark:bg-slate-800/50';
+    const tagStyle = isHigh ? 'bg-rose-100/80 text-rose-800 border-rose-200' : 'bg-blue-100/80 text-blue-800 border-blue-200';
 
     return `
-      <div class="p-4 rounded-xl border ${borderStyle} flex items-center justify-between gap-4 shadow-xs">
+      <div class="p-4 rounded-xl border ${borderStyle} flex items-center justify-between gap-4 shadow-2xs hover:border-blue-400 transition">
         <div class="flex-1">
           <div class="flex items-center gap-2 mb-1">
-            <span class="text-[10px] font-bold px-2 py-0.5 rounded border ${tagStyle}">${r.priority} PRIORITY</span>
-            <h4 class="font-semibold text-xs text-slate-900">${r.title}</h4>
+            <span class="text-[9px] font-mono font-bold px-2 py-0.5 rounded border ${tagStyle}">${r.priority} PRIORITY</span>
+            <h4 class="font-bold text-xs text-slate-900 dark:text-slate-100">${escapeHtml(r.title)}</h4>
           </div>
-          <p class="text-xs text-slate-600">${r.action}</p>
+          <p class="text-xs text-slate-600 dark:text-slate-400">${escapeHtml(r.action)}</p>
         </div>
-        <button onclick="handleRecommendationClick('${r.topic}')" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition flex items-center gap-1.5 shrink-0 shadow-xs">
+        <button onclick="handleRecommendationClick('${escapeHtml(r.topic)}')" class="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition flex items-center gap-1.5 shrink-0 shadow-xs cursor-pointer group">
           <span>Start Drill</span>
-          <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+          <i data-lucide="arrow-right" class="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform"></i>
         </button>
       </div>
     `;
@@ -643,6 +885,7 @@ async function sendTutorQuery() {
         try { lucide.createIcons(); } catch (e) {}
         if (streamBubble && streamBubble.msgDiv) {
           safeRenderMath(streamBubble.msgDiv);
+          enhanceCodeBlocks(streamBubble.msgDiv);
         }
         await refreshGamificationUI();
       },
@@ -738,6 +981,7 @@ function appendChatMessage(sender, text, citations = []) {
   } catch (e) {}
 
   safeRenderMath(msgDiv);
+  enhanceCodeBlocks(msgDiv);
 }
 
 function appendChatLoading() {
@@ -1294,6 +1538,7 @@ function renderCurrentDoubtExplanation() {
     }
   } catch (e) {}
   safeRenderMath(contentEl);
+  enhanceCodeBlocks(contentEl);
 }
 
 // 6. Adaptive Quiz Hub Controller
@@ -1337,18 +1582,30 @@ function renderQuizQuestion(index) {
   const total = quiz.mcqs.length;
   document.getElementById('quiz-progress-text').innerText = `Question ${index + 1} of ${total}`;
   document.getElementById('quiz-progress-bar').style.width = `${((index + 1) / total) * 100}%`;
-  document.getElementById('quiz-difficulty-badge').innerText = q.difficulty ? q.difficulty.toUpperCase() : 'MEDIUM';
+  
+  const diffBadge = document.getElementById('quiz-difficulty-badge');
+  if (diffBadge) {
+    const diff = (q.difficulty || 'medium').toLowerCase();
+    diffBadge.innerText = diff.toUpperCase();
+    if (diff === 'hard') {
+      diffBadge.className = 'px-2 py-0.5 rounded font-bold font-mono text-[10px] bg-purple-100 text-purple-800 border border-purple-200';
+    } else if (diff === 'easy') {
+      diffBadge.className = 'px-2 py-0.5 rounded font-bold font-mono text-[10px] bg-emerald-100 text-emerald-800 border border-emerald-200';
+    } else {
+      diffBadge.className = 'px-2 py-0.5 rounded font-bold font-mono text-[10px] bg-amber-100 text-amber-800 border border-amber-200';
+    }
+  }
 
   const answered = appState.quizAnswers[q.id];
   const optionLetters = ['A', 'B', 'C', 'D'];
 
   container.innerHTML = `
-    <div class="mb-5 pb-4 border-b border-slate-100">
+    <div class="mb-5 pb-4 border-b border-slate-100 dark:border-slate-800">
       <div class="flex items-center justify-between text-xs text-slate-400 mb-2">
-        <span class="font-medium text-blue-600 font-mono">${q.topic}</span>
-        <span>Reference: ${q.source_doc} (${q.source_page})</span>
+        <span class="font-medium text-blue-600 font-mono">${escapeHtml(q.topic)}</span>
+        <span>Reference: ${escapeHtml(q.source_doc)} (${escapeHtml(q.source_page)})</span>
       </div>
-      <h3 class="text-base font-bold text-slate-900 leading-snug">${q.question}</h3>
+      <h3 class="text-base font-bold text-slate-900 dark:text-slate-100 leading-snug">${escapeHtml(q.question)}</h3>
     </div>
 
     <div class="space-y-2.5 mb-6" id="quiz-options-list">
@@ -1374,7 +1631,7 @@ function renderQuizQuestion(index) {
         return `
           <button onclick="handleOptionSelect('${q.id}', ${optIdx})" ${answered ? 'disabled' : ''} class="study-opt-btn ${btnClass}">
             <span class="opt-badge ${badgeClass}">${optionLetters[optIdx]}</span>
-            <span class="flex-1">${cleanOpt}</span>
+            <span class="flex-1">${escapeHtml(cleanOpt)}</span>
             ${iconHtml}
           </button>
         `;
@@ -1382,21 +1639,21 @@ function renderQuizQuestion(index) {
     </div>
 
     ${answered ? `
-      <div class="p-4 rounded-xl ${answered.is_correct ? 'bg-emerald-50 border border-emerald-200 text-emerald-900' : 'bg-rose-50 border border-rose-200 text-rose-900'} mb-5">
+      <div class="p-4 rounded-xl ${answered.is_correct ? 'bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200' : 'bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800 text-rose-900 dark:text-rose-200'} mb-5">
         <div class="flex items-center gap-1.5 font-bold text-xs uppercase mb-1">
           <i data-lucide="${answered.is_correct ? 'check-circle' : 'alert-circle'}" class="w-4 h-4"></i>
           <span>${answered.is_correct ? 'Correct! (+15 XP)' : 'Incorrect'}</span>
         </div>
-        <p class="text-xs leading-relaxed text-slate-700">${answered.explanation}</p>
-        <div class="mt-2.5 flex items-center gap-4 text-[11px] text-slate-500 pt-2 border-t border-slate-200/60">
-          <span>Streak: <strong class="text-amber-700">${answered.streak} 🔥</strong></span>
-          <span>Adaptive Level: <strong class="text-blue-700 uppercase">${answered.next_difficulty}</strong></span>
+        <p class="text-xs leading-relaxed text-slate-700 dark:text-slate-300">${escapeHtml(answered.explanation)}</p>
+        <div class="mt-2.5 flex items-center gap-4 text-[11px] text-slate-500 pt-2 border-t border-slate-200/60 dark:border-slate-800">
+          <span>Streak: <strong class="text-amber-700 dark:text-amber-400">${answered.streak} 🔥</strong></span>
+          <span>Adaptive Level: <strong class="text-blue-700 dark:text-blue-400 uppercase">${escapeHtml(answered.next_difficulty)}</strong></span>
         </div>
       </div>
     ` : ''}
 
-    <div class="flex items-center justify-between pt-4 border-t border-slate-100">
-      <button onclick="prevQuizQuestion()" ${index === 0 ? 'disabled' : ''} class="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 disabled:opacity-40 transition">
+    <div class="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
+      <button onclick="prevQuizQuestion()" ${index === 0 ? 'disabled' : ''} class="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 disabled:opacity-40 transition">
         Previous
       </button>
       <button onclick="nextQuizQuestion()" class="px-4 py-2 text-xs font-semibold rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition flex items-center gap-1.5 shadow-sm">
@@ -1406,6 +1663,8 @@ function renderQuizQuestion(index) {
     </div>
   `;
   lucide.createIcons();
+  safeRenderMath(container);
+  enhanceCodeBlocks(container);
 }
 
 async function handleOptionSelect(questionId, selectedIdx) {

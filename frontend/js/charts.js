@@ -11,14 +11,15 @@ const chartManager = {
       radarChartInstance.destroy();
     }
 
+    const isDark = typeof document !== 'undefined' && document.body.classList.contains('dark-theme');
     const context = ctx.getContext('2d');
     const gradient = context.createRadialGradient(
       ctx.width / 2, ctx.height / 2, 10,
       ctx.width / 2, ctx.height / 2, 180
     );
-    gradient.addColorStop(0, 'rgba(59, 130, 246, 0.35)');
-    gradient.addColorStop(0.7, 'rgba(99, 102, 241, 0.2)');
-    gradient.addColorStop(1, 'rgba(147, 197, 253, 0.05)');
+    gradient.addColorStop(0, isDark ? 'rgba(59, 130, 246, 0.45)' : 'rgba(59, 130, 246, 0.35)');
+    gradient.addColorStop(0.7, isDark ? 'rgba(99, 102, 241, 0.25)' : 'rgba(99, 102, 241, 0.2)');
+    gradient.addColorStop(1, 'rgba(147, 197, 253, 0.03)');
 
     radarChartInstance = new Chart(ctx, {
       type: 'radar',
@@ -28,12 +29,12 @@ const chartManager = {
           label: 'Mastery Level (%)',
           data: scores,
           backgroundColor: gradient,
-          borderColor: '#2563eb',
-          pointBackgroundColor: '#2563eb',
-          pointBorderColor: '#ffffff',
+          borderColor: isDark ? '#60a5fa' : '#2563eb',
+          pointBackgroundColor: isDark ? '#60a5fa' : '#2563eb',
+          pointBorderColor: isDark ? '#0f172a' : '#ffffff',
           pointBorderWidth: 2,
-          pointHoverBackgroundColor: '#1d4ed8',
-          pointHoverBorderColor: '#ffffff',
+          pointHoverBackgroundColor: isDark ? '#93c5fd' : '#1d4ed8',
+          pointHoverBorderColor: isDark ? '#0f172a' : '#ffffff',
           pointHoverBorderWidth: 3,
           borderWidth: 2.5,
           pointRadius: 4.5,
@@ -49,15 +50,15 @@ const chartManager = {
         },
         scales: {
           r: {
-            angleLines: { color: 'rgba(226, 232, 240, 0.75)' },
-            grid: { color: 'rgba(241, 245, 249, 0.9)' },
+            angleLines: { color: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(226, 232, 240, 0.75)' },
+            grid: { color: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(241, 245, 249, 0.9)' },
             pointLabels: {
-              color: '#334155',
+              color: isDark ? '#cbd5e1' : '#334155',
               font: { family: 'Plus Jakarta Sans, sans-serif', size: 11.5, weight: '600' }
             },
             ticks: {
               backdropColor: 'transparent',
-              color: '#94a3b8',
+              color: isDark ? '#64748b' : '#94a3b8',
               stepSize: 20,
               font: { family: 'JetBrains Mono, monospace', size: 10 }
             },
@@ -68,7 +69,7 @@ const chartManager = {
         plugins: {
           legend: { display: false },
           tooltip: {
-            backgroundColor: 'rgba(15, 23, 42, 0.92)',
+            backgroundColor: isDark ? 'rgba(15, 23, 42, 0.96)' : 'rgba(15, 23, 42, 0.92)',
             titleFont: { family: 'Plus Jakarta Sans, sans-serif', weight: '700', size: 12.5 },
             bodyFont: { family: 'Plus Jakarta Sans, sans-serif', size: 12 },
             padding: 12,
@@ -92,6 +93,8 @@ const chartManager = {
     if (barChartInstance) {
       barChartInstance.destroy();
     }
+
+    const isDark = typeof document !== 'undefined' && document.body.classList.contains('dark-theme');
 
     // Color code with luminous gradients
     const context = ctx.getContext('2d');
@@ -139,9 +142,9 @@ const chartManager = {
           x: {
             min: 0,
             max: 100,
-            grid: { color: 'rgba(241, 245, 249, 0.9)' },
+            grid: { color: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(241, 245, 249, 0.9)' },
             ticks: { 
-              color: '#94a3b8', 
+              color: isDark ? '#64748b' : '#94a3b8', 
               font: { family: 'JetBrains Mono, monospace', size: 10.5 },
               callback: (val) => `${val}%`
             }
@@ -149,7 +152,7 @@ const chartManager = {
           y: {
             grid: { display: false },
             ticks: { 
-              color: '#1e293b', 
+              color: isDark ? '#e2e8f0' : '#1e293b', 
               font: { family: 'Plus Jakarta Sans, sans-serif', size: 12, weight: '600' } 
             }
           }
@@ -157,7 +160,7 @@ const chartManager = {
         plugins: {
           legend: { display: false },
           tooltip: {
-            backgroundColor: 'rgba(15, 23, 42, 0.92)',
+            backgroundColor: isDark ? 'rgba(15, 23, 42, 0.96)' : 'rgba(15, 23, 42, 0.92)',
             titleFont: { family: 'Plus Jakarta Sans, sans-serif', weight: '700', size: 12.5 },
             bodyFont: { family: 'Plus Jakarta Sans, sans-serif', size: 12 },
             padding: 12,
