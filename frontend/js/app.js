@@ -1524,6 +1524,7 @@ function setDoubtLevel(level) {
   currentDoubtLevel = level;
   document.querySelectorAll('[data-doubt-level]').forEach(btn => {
     const isCurrent = btn.getAttribute('data-doubt-level') === level;
+    btn.classList.toggle('active', isCurrent);
     btn.classList.toggle('bg-white', isCurrent);
     btn.classList.toggle('text-blue-700', isCurrent);
     btn.classList.toggle('shadow-sm', isCurrent);

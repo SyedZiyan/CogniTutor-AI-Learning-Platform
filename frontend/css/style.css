@@ -355,6 +355,154 @@ body.dark-theme .hero-command-card {
   transition: all 0.2s ease;
 }
 
+/* Section Hero Header & Polish Components */
+.section-hero-header {
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.85);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+body.dark-theme .section-hero-header {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.eyebrow-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #2563eb;
+  margin-bottom: 2px;
+}
+
+body.dark-theme .eyebrow-badge {
+  color: #60a5fa;
+}
+
+.interactive-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 13px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  color: #334155;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  cursor: pointer;
+  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.interactive-chip:hover {
+  border-color: #3b82f6;
+  color: #1d4ed8;
+  background-color: #f8fafc;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px -2px rgba(37, 99, 235, 0.12);
+}
+
+body.dark-theme .interactive-chip {
+  background-color: #131b2e;
+  border-color: rgba(255, 255, 255, 0.09);
+  color: #cbd5e1;
+}
+
+body.dark-theme .interactive-chip:hover {
+  background-color: #1a253d;
+  border-color: #60a5fa;
+  color: #93c5fd;
+  box-shadow: 0 4px 12px -2px rgba(59, 130, 246, 0.25);
+}
+
+.segmented-control {
+  display: inline-flex;
+  padding: 4px;
+  border-radius: 12px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  gap: 4px;
+}
+
+body.dark-theme .segmented-control {
+  background: #0f172a;
+  border-color: rgba(255, 255, 255, 0.09);
+}
+
+.segmented-btn {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.16s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.segmented-btn:hover {
+  color: #0f172a;
+}
+
+.segmented-btn.active {
+  background: #ffffff;
+  color: #1d4ed8;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+}
+
+body.dark-theme .segmented-btn {
+  color: #94a3b8;
+}
+
+body.dark-theme .segmented-btn:hover {
+  color: #ffffff;
+}
+
+body.dark-theme .segmented-btn.active {
+  background: #1e293b;
+  color: #60a5fa;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.dropzone-container {
+  position: relative;
+  border: 2px dashed rgba(203, 213, 225, 0.9);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.8) 0%, rgba(241, 245, 249, 0.6) 100%);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.dropzone-container:hover {
+  border-color: #3b82f6;
+  background: linear-gradient(180deg, rgba(239, 246, 255, 0.8) 0%, rgba(219, 234, 254, 0.4) 100%);
+  box-shadow: 0 8px 24px -4px rgba(37, 99, 235, 0.12);
+}
+
+body.dark-theme .dropzone-container {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.7) 0%, rgba(11, 15, 25, 0.7) 100%);
+}
+
+body.dark-theme .dropzone-container:hover {
+  border-color: #60a5fa;
+  background: linear-gradient(180deg, rgba(30, 58, 138, 0.25) 0%, rgba(15, 23, 42, 0.8) 100%);
+  box-shadow: 0 8px 24px -4px rgba(59, 130, 246, 0.2);
+}
+
 /* ==========================================================================
    Tier-1 Cards & Surfaces (Tactile Apple / Linear Hardware Feel)
    ========================================================================== */
@@ -1082,6 +1230,30 @@ body.dark-theme .notes-prose code:not(pre code) {
   background-color: #1e293b !important;
   color: #93c5fd !important;
   border-color: #334155 !important;
+}
+
+body.dark-theme .bg-emerald-50\/70, body.dark-theme [class*="bg-emerald-50"] {
+  background-color: rgba(6, 78, 59, 0.25) !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+  color: #a7f3d0 !important;
+}
+
+body.dark-theme .bg-amber-50\/70, body.dark-theme [class*="bg-amber-50"] {
+  background-color: rgba(120, 53, 15, 0.25) !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+  color: #fde68a !important;
+}
+
+body.dark-theme .bg-blue-50\/60, body.dark-theme [class*="bg-blue-50"] {
+  background-color: rgba(30, 58, 138, 0.25) !important;
+  border-color: rgba(59, 130, 246, 0.3) !important;
+  color: #bfdbfe !important;
+}
+
+body.dark-theme .bg-rose-50\/70, body.dark-theme [class*="bg-rose-50"] {
+  background-color: rgba(159, 18, 57, 0.25) !important;
+  border-color: rgba(244, 63, 94, 0.3) !important;
+  color: #fecdd3 !important;
 }
 
 /* Crisp Clean Scrollbars */
