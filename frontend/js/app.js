@@ -333,6 +333,26 @@ function executeCmdItem(idx) {
   }
 }
 
+// Toggle Left Sidebar (Linear / Notion App Shell)
+function toggleSidebar() {
+  const sidebar = document.getElementById('app-sidebar');
+  if (sidebar) {
+    sidebar.classList.toggle('sidebar-collapsed');
+  }
+}
+
+const tabBreadcrumbTitles = {
+  dashboard: 'Overview & Diagnostics',
+  tutor: 'Ask Notes (Q&A Copilot)',
+  doubt: 'Explain Simply (3 Levels)',
+  quiz: 'Practice Quiz & Assessment',
+  roadmap: 'Personalized Study Plan',
+  graph: 'Concept Knowledge Graph',
+  viva: 'Socratic Oral Viva Exam',
+  documents: 'My Study Materials',
+  achievements: 'Leaderboard & Achievements'
+};
+
 // Initialize App
 document.addEventListener('DOMContentLoaded', async () => {
   initTheme();
@@ -343,7 +363,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupDoubtSolver();
   setupQuizControls();
 
-  // Global shortcut for Ctrl+K / Cmd+K
+  // On small mobile screens, collapse sidebar initially
+  if (window.innerWidth <= 768) {
+    const sidebar = document.getElementById('app-sidebar');
+    if (sidebar) sidebar.classList.add('sidebar-collapsed');
+  }
+
+  // Global shortcut for Ctrl+K / Cmd+K and Ctrl+B / Cmd+B
   window.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
       e.preventDefault();
@@ -353,6 +379,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       } else {
         openCommandPalette();
       }
+    } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+      e.preventDefault();
+      toggleSidebar();
     }
   });
 
@@ -362,7 +391,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Visual confirmation toast
   setTimeout(() => {
-    showToast("🚀 CogniTutor Pro Tier-1 Active • Press Ctrl+K for Command Palette", "success");
+    showToast("🚀 CogniTutor Pro Workspace Active • Press Ctrl+K for Search or Ctrl+B to Toggle Sidebar", "success");
   }, 400);
 });
 
@@ -380,6 +409,12 @@ function setupNavigation() {
 function switchTab(tabId) {
   appState.activeTab = tabId;
 
+  // Update dynamic breadcrumb
+  const breadcrumbEl = document.getElementById('current-tab-breadcrumb');
+  if (breadcrumbEl && tabBreadcrumbTitles[tabId]) {
+    breadcrumbEl.textContent = tabBreadcrumbTitles[tabId];
+  }
+
   // Update nav button states
   document.querySelectorAll('[data-tab-target]').forEach(btn => {
     const isCurrent = btn.getAttribute('data-tab-target') === tabId;
@@ -390,6 +425,14 @@ function switchTab(tabId) {
   document.querySelectorAll('.tab-view').forEach(view => {
     view.classList.toggle('hidden', view.id !== `view-${tabId}`);
   });
+
+  // On mobile screens, auto-close sidebar after selection
+  if (window.innerWidth <= 768) {
+    const sidebar = document.getElementById('app-sidebar');
+    if (sidebar && !sidebar.classList.contains('sidebar-collapsed')) {
+      sidebar.classList.add('sidebar-collapsed');
+    }
+  }
 
   // Specific tab actions
   if (tabId === 'dashboard') refreshDashboard();
@@ -422,8 +465,16 @@ async function refreshDashboard() {
       greetingHeader.innerText = `${greeting}! Here is your personalized learning progress for today.`;
     }
 
-    // Update Top Overview Cards
-    document.getElementById('dash-overall-progress').innerText = `${comp.overall_mastery}%`;
+    // Update Top Overview Cards & Radial Progress Ring
+    const overallProgressEl = document.getElementById('dash-overall-progress');
+    if (overallProgressEl) {
+      overallProgressEl.innerText = `${comp.overall_mastery}%`;
+    }
+    const radialGaugeCircle = document.getElementById('dash-radial-gauge-circle');
+    if (radialGaugeCircle) {
+      const pct = Math.max(0, Math.min(100, comp.overall_mastery || 0));
+      radialGaugeCircle.setAttribute('stroke-dasharray', `${pct}, 100`);
+    }
     document.getElementById('dash-strongest-topic').innerText = comp.strongest_topic;
     document.getElementById('dash-weakest-topic').innerText = comp.weakest_topic;
     document.getElementById('dash-quizzes-count').innerText = gam.quizzes_completed;
