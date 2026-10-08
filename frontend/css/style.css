@@ -299,10 +299,23 @@ body.dark-theme .sidebar-nav-btn:hover {
 }
 
 body.dark-theme .sidebar-nav-btn.active {
-  color: #60a5fa !important;
-  background-color: rgba(30, 58, 138, 0.5) !important;
-  border-color: #3b82f6 !important;
-  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.25);
+  color: #ffffff !important;
+  background: linear-gradient(90deg, rgba(37, 99, 235, 0.22) 0%, rgba(30, 58, 138, 0.08) 100%) !important;
+  border-color: rgba(59, 130, 246, 0.4) !important;
+  box-shadow: 0 0 15px -3px rgba(37, 99, 235, 0.3);
+  position: relative;
+}
+
+body.dark-theme .sidebar-nav-btn.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 3px;
+  border-radius: 0 4px 4px 0;
+  background: linear-gradient(180deg, #60a5fa, #3b82f6);
+  box-shadow: 0 0 8px #60a5fa;
 }
 
 body.dark-theme .sidebar-nav-btn.active i {
@@ -320,10 +333,13 @@ body.dark-theme .sidebar-nav-btn.active i {
 }
 
 body.dark-theme .hero-command-card {
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(20, 29, 48, 0.92) 100%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.09) !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08),
-              0 16px 36px -4px rgba(0, 0, 0, 0.5) !important;
+  background: radial-gradient(circle at 95% 5%, rgba(59, 130, 246, 0.18), transparent 50%),
+              radial-gradient(circle at 5% 95%, rgba(99, 102, 241, 0.12), transparent 45%),
+              linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(10, 14, 26, 0.95) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12),
+              0 20px 45px -8px rgba(0, 0, 0, 0.65),
+              0 0 35px -10px rgba(59, 130, 246, 0.2) !important;
 }
 
 /* Circular Radial Progress Gauge */
@@ -1137,16 +1153,20 @@ body.dark-theme .nav-tab-btn.active {
 }
 
 body.dark-theme .human-card {
-  background-color: #0f172a !important;
+  background: linear-gradient(180deg, rgba(17, 24, 39, 0.85) 0%, rgba(13, 17, 28, 0.82) 100%) !important;
+  backdrop-filter: blur(20px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(190%) !important;
   border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.06),
-              0 4px 12px -2px rgba(0, 0, 0, 0.4) !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.09),
+              0 8px 24px -4px rgba(0, 0, 0, 0.55) !important;
 }
 
 body.dark-theme .human-card:hover {
-  border-color: rgba(96, 165, 250, 0.35) !important;
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.1),
-              0 12px 28px -4px rgba(0, 0, 0, 0.55) !important;
+  border-color: rgba(96, 165, 250, 0.4) !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.16),
+              0 16px 36px -4px rgba(0, 0, 0, 0.7),
+              0 0 25px -5px rgba(59, 130, 246, 0.2) !important;
+  transform: translateY(-2px);
 }
 
 body.dark-theme h1, body.dark-theme h2, body.dark-theme h3, body.dark-theme h4,
