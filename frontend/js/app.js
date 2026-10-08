@@ -362,7 +362,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Visual confirmation toast
   setTimeout(() => {
-    showToast("✨ CogniTutor Pro Glass v3.5 Loaded (Animations & Blurs Active)", "success");
+    showToast("🚀 CogniTutor Pro Tier-1 Active • Press Ctrl+K for Command Palette", "success");
   }, 400);
 });
 
