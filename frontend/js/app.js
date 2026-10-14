@@ -216,6 +216,8 @@ const commandPaletteItems = [
   // Quick Actions
   { id: 'act-quiz', title: 'Start Adaptive Practice Quiz Now', category: 'Quick Action', icon: 'play', action: () => { switchTab('quiz'); const btn = document.getElementById('start-quiz-btn'); if (btn) btn.click(); }, keywords: 'start quiz test adaptive generate' },
   { id: 'act-viva', title: 'Begin Socratic Oral Viva Defense', category: 'Quick Action', icon: 'mic', action: () => { switchTab('viva'); startNewVivaSession(); }, keywords: 'begin oral viva exam defense prof turing' },
+  { id: 'act-db', title: 'Inspect SQLite Database & Relational Metrics', category: 'Database & Cloud', icon: 'database', action: () => openDatabaseModal(), keywords: 'database sqlite wal storage chunks sql records' },
+  { id: 'act-share', title: 'Share Public Access Link (HTTPS Tunnel)', category: 'Database & Cloud', icon: 'globe', action: () => openShareModal(), keywords: 'share link public https internet tunnel qr code' },
   { id: 'act-theme', title: 'Toggle Dark / Light Mode', category: 'Quick Action', icon: 'moon', action: () => toggleTheme(), keywords: 'theme dark light mode toggle' },
   { id: 'act-settings', title: 'Open Settings & Preferences', category: 'Quick Action', icon: 'settings-2', action: () => toggleSettingsDrawer(), keywords: 'settings preferences llm model gemini openai api' }
 ];
@@ -393,6 +395,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Load initial data
   await refreshGamificationUI();
   await refreshDashboard();
+  await refreshDatabaseStats();
 
   // Visual confirmation toast
   setTimeout(() => {
@@ -2593,6 +2596,80 @@ async function submitVivaDefense() {
     lucide.createIcons();
   }
 }
+
+// ==========================================
+// Persistent SQLite Database & Public Sharing Modals
+// ==========================================
+
+async function openDatabaseModal() {
+  const modal = document.getElementById('database-modal');
+  if (modal) {
+    modal.classList.remove('hidden');
+    await refreshDatabaseStats();
+  }
+}
+
+function closeDatabaseModal() {
+  const modal = document.getElementById('database-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+async function refreshDatabaseStats() {
+  try {
+    const stats = await api.getDbStats();
+    const sizeEl = document.getElementById('db-modal-size');
+    const docsEl = document.getElementById('db-modal-docs');
+    const chunksEl = document.getElementById('db-modal-chunks');
+    const quizzesEl = document.getElementById('db-modal-quizzes');
+    const chatsEl = document.getElementById('db-modal-chats');
+    const vivasEl = document.getElementById('db-modal-vivas');
+    const pathEl = document.getElementById('db-modal-path');
+    const pillEl = document.getElementById('header-db-pill');
+
+    if (sizeEl) sizeEl.innerText = `${stats.database_size_kb} KB`;
+    if (docsEl) docsEl.innerText = stats.total_documents;
+    if (chunksEl) chunksEl.innerText = stats.total_chunks;
+    if (quizzesEl) quizzesEl.innerText = stats.total_quiz_attempts;
+    if (chatsEl) chatsEl.innerText = stats.total_chat_interactions;
+    if (vivasEl) vivasEl.innerText = stats.total_viva_rounds;
+    if (pathEl) pathEl.innerText = stats.database_file || 'data/cognitutor.db';
+    if (pillEl) pillEl.innerText = `SQLite (${stats.database_size_kb} KB)`;
+  } catch (err) {
+    console.warn("Could not refresh DB stats:", err);
+  }
+}
+
+function openShareModal() {
+  const modal = document.getElementById('share-modal');
+  const inputEl = document.getElementById('public-share-url');
+  if (inputEl) {
+    inputEl.value = window.location.origin;
+  }
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeShareModal() {
+  const modal = document.getElementById('share-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function copyPublicUrl() {
+  const inputEl = document.getElementById('public-share-url');
+  if (!inputEl) return;
+  navigator.clipboard.writeText(inputEl.value).then(() => {
+    const btnText = document.getElementById('copy-btn-text');
+    if (btnText) {
+      btnText.innerText = 'Copied!';
+      setTimeout(() => { btnText.innerText = 'Copy Link'; }, 2000);
+    }
+    showToast('Public link copied to clipboard!', 'success');
+  }).catch(() => {
+    inputEl.select();
+    document.execCommand('copy');
+    showToast('Public link copied!', 'success');
+  });
+}
+
 
 
 

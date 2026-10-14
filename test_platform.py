@@ -133,7 +133,24 @@ def run_tests():
     assert "feedback" in viva_r1 and "next_question" in viva_r1
     print(f"✅ Socratic Viva Round 1 Defense: OK (Score: {viva_r1['score_this_round']}/100, Examiner Critique received)")
 
-    print("\n🎉 ALL 12 VERIFICATION TEST SUITES PASSED FLAWLESSLY!\n")
+    # 13. Persistent SQLite Relational Database Engine
+    res_db = client.get("/api/db/stats")
+    assert res_db.status_code == 200, f"DB stats failed: {res_db.text}"
+    db_stats = res_db.json()
+    assert db_stats["total_documents"] >= 8
+    assert db_stats["total_chunks"] >= 70
+    assert db_stats["total_quiz_attempts"] >= 1
+    assert db_stats["total_chat_interactions"] >= 1
+    assert db_stats["total_viva_rounds"] >= 1
+    assert db_stats["status"] == "connected"
+
+    res_history = client.get("/api/db/quiz-history")
+    assert res_history.status_code == 200
+    assert len(res_history.json()["attempts"]) >= 1
+
+    print(f"✅ SQLite Relational Database Engine: OK ({db_stats['database_size_kb']} KB, {db_stats['total_documents']} docs, {db_stats['total_chunks']} chunks, {db_stats['total_quiz_attempts']} quiz attempts, {db_stats['total_chat_interactions']} chats, {db_stats['total_viva_rounds']} viva defenses saved in WAL mode)")
+
+    print("\n🎉 ALL 13 VERIFICATION TEST SUITES PASSED FLAWLESSLY!\n")
 
 if __name__ == "__main__":
     run_tests()

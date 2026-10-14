@@ -7,9 +7,9 @@
     "file_size_kb": 3.3,
     "chunk_count": 5,
     "topics": [
+      "Deep Learning Fundamentals",
       "Neural Networks",
-      "Convolutional Neural Networks (CNN)",
-      "Deep Learning Fundamentals"
+      "Convolutional Neural Networks (CNN)"
     ],
     "is_sample": true
   },
@@ -21,10 +21,10 @@
     "file_size_kb": 3.2,
     "chunk_count": 7,
     "topics": [
-      "Neural Networks",
-      "Forward & Loss Functions",
       "Overfitting & Regularization",
-      "Backpropagation & Optimization"
+      "Backpropagation & Optimization",
+      "Neural Networks",
+      "Forward & Loss Functions"
     ],
     "is_sample": true
   },
@@ -36,9 +36,9 @@
     "file_size_kb": 4.6,
     "chunk_count": 10,
     "topics": [
+      "Deep Learning Fundamentals",
       "Recurrent Neural Networks (RNN)",
-      "Attention & Transformers",
-      "Deep Learning Fundamentals"
+      "Attention & Transformers"
     ],
     "is_sample": true
   },
@@ -50,8 +50,8 @@
     "file_size_kb": 5.0,
     "chunk_count": 10,
     "topics": [
-      "Vanishing Gradient Problem",
-      "Deep Learning Fundamentals"
+      "Deep Learning Fundamentals",
+      "Vanishing Gradient Problem"
     ],
     "is_sample": true
   },
@@ -63,8 +63,8 @@
     "file_size_kb": 6.9,
     "chunk_count": 14,
     "topics": [
-      "Convolutional Neural Networks (CNN)",
-      "Deep Learning Fundamentals"
+      "Deep Learning Fundamentals",
+      "Convolutional Neural Networks (CNN)"
     ],
     "is_sample": true
   },
@@ -76,10 +76,10 @@
     "file_size_kb": 35.5,
     "chunk_count": 6,
     "topics": [
+      "Gated Recurrent Units (GRU)",
       "Vanishing Gradient Problem",
-      "Recurrent Neural Networks (RNN)",
       "Long Short-Term Memory (LSTM)",
-      "Gated Recurrent Units (GRU)"
+      "Recurrent Neural Networks (RNN)"
     ],
     "is_sample": true
   },
@@ -91,8 +91,8 @@
     "file_size_kb": 30.9,
     "chunk_count": 4,
     "topics": [
-      "Attention & Transformers",
-      "Recurrent Neural Networks (RNN)"
+      "Recurrent Neural Networks (RNN)",
+      "Attention & Transformers"
     ],
     "is_sample": true
   },

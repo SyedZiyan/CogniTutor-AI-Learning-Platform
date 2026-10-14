@@ -48,3 +48,8 @@ storage/uploads/*
 
 uploads/*
 !uploads/.gitkeep
+
+# SQLite Temporary WAL / SHM files
+*.db-shm
+*.db-wal
+

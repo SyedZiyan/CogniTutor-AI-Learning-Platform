@@ -1,5 +1,5 @@
 import math
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 class GamificationEngine:
     """

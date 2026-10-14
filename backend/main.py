@@ -20,6 +20,7 @@ from backend.roadmap_engine import roadmap_engine
 from backend.gamification import gamification_engine
 from backend.knowledge_graph import knowledge_graph_engine
 from backend.viva_engine import socratic_viva_engine
+from backend.database import db
 
 app = FastAPI(
     title=settings.app_name,
@@ -79,14 +80,46 @@ async def startup_event():
 # 1. Platform Status & Library
 @app.get("/api/status")
 async def get_status():
+    db_stats = db.get_db_stats()
     return {
         "status": "online",
         "app_name": settings.app_name,
         "version": settings.version,
         "total_documents": len(storage_manager.documents),
         "total_chunks": len(storage_manager.chunks),
-        "active_llm": settings.llm_provider
+        "active_llm": settings.llm_provider,
+        "database": db_stats
     }
+
+# 1b. Persistent Relational Database Endpoints
+@app.get("/api/db/stats")
+async def get_database_stats():
+    return db.get_db_stats()
+
+@app.get("/api/db/quiz-history")
+async def get_db_quiz_history(limit: Optional[int] = 50):
+    return {"total": len(db.get_quiz_attempts(limit=limit)), "attempts": db.get_quiz_attempts(limit=limit)}
+
+@app.get("/api/db/chat-history")
+async def get_db_chat_history(session_id: Optional[str] = "default", limit: Optional[int] = 30):
+    return {"session_id": session_id, "messages": db.get_recent_chat(session_id=session_id, limit=limit)}
+
+@app.get("/api/db/viva-history")
+async def get_db_viva_history(session_id: Optional[str] = None):
+    return {"sessions": db.get_viva_history(session_id=session_id)}
+
+@app.get("/api/db/download")
+async def download_database():
+    if not os.path.exists(db.db_path):
+        raise HTTPException(status_code=404, detail="Database file not found")
+    return FileResponse(
+        db.db_path,
+        media_type="application/x-sqlite3",
+        filename="cognitutor.db",
+        headers={"Content-Disposition": "attachment; filename=cognitutor.db"}
+    )
+
+
 
 @app.get("/api/documents")
 async def get_documents():
@@ -173,6 +206,15 @@ async def tutor_chat(req: TutorQueryRequest):
 
     response = tutor_engine.answer_query(req.query, top_k=req.top_k)
     gamification_engine.add_xp(15, "Consulted AI Tutor")
+    try:
+        db.record_chat(
+            query=req.query,
+            answer=response.get("answer", ""),
+            citations=response.get("citations", []),
+            retrieval_strategy=response.get("retrieval_strategy", "Hybrid-BM25-Dense-RRF")
+        )
+    except Exception as e:
+        print(f"Warning: Chat DB logging failed: {e}")
     return response
 
 # 3b. Real-Time Token Streaming (Server-Sent Events / SSE)
@@ -183,6 +225,15 @@ async def tutor_chat_stream(req: TutorQueryRequest):
 
     response = tutor_engine.answer_query(req.query, top_k=req.top_k)
     gamification_engine.add_xp(15, "Consulted AI Tutor (Stream)")
+    try:
+        db.record_chat(
+            query=req.query,
+            answer=response.get("answer", ""),
+            citations=response.get("citations", []),
+            retrieval_strategy=response.get("retrieval_strategy", "Hybrid-BM25-Dense-RRF")
+        )
+    except Exception as e:
+        print(f"Warning: Chat stream DB logging failed: {e}")
 
     async def event_generator():
         # 1. Send initial context with citations and grounding metadata
@@ -266,6 +317,19 @@ async def evaluate_mcq(req: EvaluateMCQRequest):
     gamification_engine.add_xp(result["xp_earned"], "Completed Quiz Question")
     gamification_engine.quizzes_completed += 1
 
+    # Record in SQLite DB
+    try:
+        db.record_quiz_attempt(
+            question_id=req.question_id,
+            topic=result.get("topic", "General"),
+            selected_index=req.selected_option_index,
+            is_correct=result.get("is_correct", False),
+            difficulty=req.current_difficulty or "medium",
+            xp_earned=result.get("xp_earned", 0)
+        )
+    except Exception as e:
+        print(f"Warning: Quiz DB logging failed: {e}")
+
     return result
 
 @app.post("/api/quiz/evaluate-short")
@@ -285,6 +349,19 @@ async def evaluate_short(req: EvaluateShortAnswerRequest):
     )
 
     gamification_engine.add_xp(result["xp_earned"], "Completed Short Answer Assessment")
+
+    try:
+        db.record_quiz_attempt(
+            question_id=req.question_id,
+            topic=result.get("topic", "General"),
+            selected_index=-1,
+            is_correct=result.get("passed", False),
+            difficulty="medium",
+            xp_earned=result.get("xp_earned", 0)
+        )
+    except Exception as e:
+        print(f"Warning: Short answer Quiz DB logging failed: {e}")
+
     return result
 
 # 6. Competency & Skill Gap Analysis
@@ -344,6 +421,19 @@ async def respond_viva_session(req: VivaRespondRequest):
     result = socratic_viva_engine.process_response(req.session_id, req.student_transcript)
     if "error" in result:
         raise HTTPException(status_code=400, detail=result["error"])
+    try:
+        db.record_viva_defense(
+            session_id=req.session_id,
+            topic=result.get("topic", "Viva Session"),
+            student_name="Scholar",
+            round_number=result.get("round", 1),
+            examiner_question=result.get("next_question", ""),
+            student_defense=req.student_transcript,
+            score=result.get("score_this_round", 0),
+            critique=result.get("feedback", "")
+        )
+    except Exception as e:
+        print(f"Warning: Viva DB logging failed: {e}")
     return result
 
 

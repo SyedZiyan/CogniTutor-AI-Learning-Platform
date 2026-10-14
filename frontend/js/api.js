@@ -217,5 +217,12 @@ const api = {
     }
     return res.json();
   },
+
+  async getDbStats() {
+    const res = await fetch(`${API_BASE}/api/db/stats`);
+    if (!res.ok) throw new Error("Failed to fetch database statistics");
+    return res.json();
+  }
 };
+
 
