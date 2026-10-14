@@ -2668,6 +2668,8 @@ function copyPublicUrl() {
     document.execCommand('copy');
     showToast('Public link copied!', 'success');
   });
+}
+
 function copyInterviewUrl() {
   const inputEl = document.getElementById('interview-prod-url');
   if (!inputEl) return;
