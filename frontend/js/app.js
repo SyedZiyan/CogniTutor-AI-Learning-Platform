@@ -2668,7 +2668,23 @@ function copyPublicUrl() {
     document.execCommand('copy');
     showToast('Public link copied!', 'success');
   });
+function copyInterviewUrl() {
+  const inputEl = document.getElementById('interview-prod-url');
+  if (!inputEl) return;
+  navigator.clipboard.writeText(inputEl.value).then(() => {
+    const btnText = document.getElementById('copy-interview-btn-text');
+    if (btnText) {
+      btnText.innerText = 'Copied!';
+      setTimeout(() => { btnText.innerText = 'Copy'; }, 2000);
+    }
+    showToast('Interview-ready link copied: ' + inputEl.value, 'success');
+  }).catch(() => {
+    inputEl.select();
+    document.execCommand('copy');
+    showToast('Interview link copied!', 'success');
+  });
 }
+
 
 
 
