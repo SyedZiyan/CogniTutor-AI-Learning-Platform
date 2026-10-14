@@ -99,9 +99,9 @@ function showToast(message, type = 'info') {
   }, 3600);
 }
 
-// Theme Toggle (Obsidian Dark Glass vs Frosted Light Glass)
+// Theme Toggle (Ultra-Clean Light Minimalist default)
 function initTheme() {
-  const savedTheme = localStorage.getItem('cogni_theme') || 'dark'; // Default to sleek obsidian dark glass
+  const savedTheme = localStorage.getItem('cogni_theme') || 'light'; // Default to clean Apple/Stripe light minimalist
   if (savedTheme === 'dark') {
     document.body.classList.add('dark-theme');
   } else {
@@ -115,7 +115,7 @@ function toggleTheme() {
   const isDark = document.body.classList.contains('dark-theme');
   localStorage.setItem('cogni_theme', isDark ? 'dark' : 'light');
   updateThemeIcon();
-  showToast(isDark ? "🌙 Obsidian Dark Glass Mode activated" : "☀️ Frosted Light Glass Mode activated", "info");
+  showToast(isDark ? "🌙 Dark mode enabled" : "☀️ Light mode enabled", "info");
   if (appState.activeTab === 'dashboard') {
     refreshDashboard();
   }
@@ -211,7 +211,7 @@ const commandPaletteItems = [
   // Quick Actions
   { id: 'act-quiz', title: 'Start Adaptive Practice Quiz Now', category: 'Quick Action', icon: 'play', action: () => { switchTab('quiz'); const btn = document.getElementById('start-quiz-btn'); if (btn) btn.click(); }, keywords: 'start quiz test adaptive generate' },
   { id: 'act-viva', title: 'Begin Socratic Oral Viva Defense', category: 'Quick Action', icon: 'mic', action: () => { switchTab('viva'); startNewVivaSession(); }, keywords: 'begin oral viva exam defense prof turing' },
-  { id: 'act-theme', title: 'Toggle Obsidian Dark / Frosted Light Theme', category: 'Quick Action', icon: 'moon', action: () => toggleTheme(), keywords: 'theme dark light mode obsidian toggle' },
+  { id: 'act-theme', title: 'Toggle Dark / Light Mode', category: 'Quick Action', icon: 'moon', action: () => toggleTheme(), keywords: 'theme dark light mode toggle' },
   { id: 'act-settings', title: 'Open Settings & Preferences', category: 'Quick Action', icon: 'settings-2', action: () => toggleSettingsDrawer(), keywords: 'settings preferences llm model gemini openai api' }
 ];
 
