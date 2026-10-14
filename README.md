@@ -10,20 +10,42 @@
 </p>
 
 <p align="center">
+  <a href="https://cognitutor-ai-platform.onrender.com">
+    <img src="https://img.shields.io/badge/🚀%20Live%20Public%20Demo-cognitutor--ai--platform.onrender.com-blue?style=for-the-badge&logo=render&logoColor=white" alt="Live Demo" />
+  </a>
+  <a href="https://cognitutor-ai-platform.onrender.com">
+    <img src="https://img.shields.io/badge/🗄️%20Persistent%20Database-SQLite%203%20WAL-success?style=for-the-badge&logo=sqlite&logoColor=white" alt="Database" />
+  </a>
+  <a href="test_platform.py">
+    <img src="https://img.shields.io/badge/✅%20Verification%20Tests-13%2F13%20Passing-brightgreen?style=for-the-badge" alt="Tests" />
+  </a>
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/Python-3.11%20%7C%203.12%20%7C%203.14-blue?logo=python" alt="Python 3" />
   <img src="https://img.shields.io/badge/FastAPI-0.115+-009688?logo=fastapi" alt="FastAPI" />
   <img src="https://img.shields.io/badge/Retrieval-BM25%20%2B%20Dense%20RRF-indigo" alt="RAG" />
   <img src="https://img.shields.io/badge/Streaming-SSE%20Token%20Stream-teal" alt="SSE" />
   <img src="https://img.shields.io/badge/Competency-Bayesian%20Mastery-emerald" alt="Competency Engine" />
-  <img src="https://img.shields.io/badge/Tests-12%20Passing-brightgreen" alt="Tests Passing" />
   <img src="https://img.shields.io/badge/License-MIT-amber" alt="License MIT" />
 </p>
 
 ---
 
+## 🌐 Public Live Access
+
+Experience CogniTutor AI live on the web with full persistent storage, RAG Q&A, and voice viva examination:
+
+> 🔗 **Live Web Application**: **[https://cognitutor-ai-platform.onrender.com](https://cognitutor-ai-platform.onrender.com)**  
+> 💻 **Local Server**: [http://127.0.0.1:8000](http://127.0.0.1:8000)
+
+*Runs 24/7 in the cloud on Render. Accessible from any smartphone, tablet, or desktop browser with zero installation.*
+
+---
+
 ## 🌟 Overview
 
-**CogniTutor AI** is a production-grade personal tutoring platform designed to solve the passive learning trap. Instead of simply generating generic answers, CogniTutor reads your uploaded course notes, diagnoses what you know versus where your skill gaps lie, dynamically adapts test questions, presents visual prerequisite knowledge graphs, and conducts oral technical viva examinations with voice synthesis.
+**CogniTutor AI** is a production-grade personal tutoring platform designed to solve the passive learning trap. Instead of simply generating generic answers, CogniTutor reads your uploaded course notes, diagnoses what you know versus where your skill gaps lie, dynamically adapts test questions, presents visual prerequisite knowledge graphs, conducts oral technical viva examinations with voice synthesis, and preserves all learning metrics in a persistent SQLite relational database.
 
 Built with an authentic **Notion / NotebookLM** human-crafted design system—free from sci-fi glowing purple neon tropes—focused entirely on clarity, deep conceptual retention, and academic rigor.
 
@@ -32,14 +54,38 @@ Built with an authentic **Notion / NotebookLM** human-crafted design system—fr
 ## 📸 Visual Showcase
 
 ### 1. Daily Study Snapshot & Knowledge Mastery Dashboard
-*Track Bayesian topic mastery, review daily study snapshots, monitor 7-day study streaks, and inspect radar knowledge shape profiles.*
+*Track Bayesian topic mastery, review daily study snapshots, monitor 7-day study streaks, inspect radar knowledge shape profiles, and view real-time database health.*
 <p align="center">
   <img src="docs/images/dashboard_preview.png" alt="CogniTutor Dashboard UI" width="95%" />
 </p>
 
 ---
 
-### 2. Interactive Concept Knowledge Graph (Visual Ontology)
+### 2. Split-Screen PDF Viewer with Grounded Bounding-Box Citations
+*Integrated PDF.js split-screen viewer side-by-side with AI Tutor chat. Clicking any citation opens the original document at the exact page, scrolls smoothly to the target excerpt, and pulses an interactive bounding-box highlight overlay.*
+<p align="center">
+  <img src="docs/images/split_screen_citations.png" alt="Split-Screen PDF Citations UI" width="95%" />
+</p>
+
+---
+
+### 3. Adaptive Practice Quiz & Competency Skill Gap Analyzer
+*Computerized Adaptive Testing (CAT) that scales question difficulty (`Easy ↔ Medium ↔ Hard`) based on live student performance and streaks. Instant rubric evaluation with XP gains and Bayesian topic mastery feedback.*
+<p align="center">
+  <img src="docs/images/adaptive_quiz_preview.png" alt="Adaptive Practice Quiz UI" width="95%" />
+</p>
+
+---
+
+### 4. Socratic Oral Viva Examination Mode
+*Simulate a rigorous academic viva with **Prof. Alan Turing (AI Examiner)**. Test conceptual understanding with live speech recognition, voice question playback, multi-round follow-up inquiries, and instant oral defense scorecards.*
+<p align="center">
+  <img src="docs/images/viva_interview_preview.png" alt="Socratic Viva Interview UI" width="95%" />
+</p>
+
+---
+
+### 5. Interactive Concept Knowledge Graph (Visual Ontology)
 *Explore how concepts evolve, connect, and depend on each other. Nodes are dynamically color-coded with live competency scores (Emerald: Strong $\ge 75\%$, Amber: Average $50-74\%$, Rose: Weak Gap $< 50\%$).*
 <p align="center">
   <img src="docs/images/knowledge_graph_preview.png" alt="Concept Knowledge Graph UI" width="95%" />
@@ -47,11 +93,21 @@ Built with an authentic **Notion / NotebookLM** human-crafted design system—fr
 
 ---
 
-### 3. Socratic Oral Viva Examination Mode
-*Simulate a rigorous academic viva with **Prof. Turing (AI Examiner)**. Test conceptual understanding with live speech recognition, voice question playback, multi-round follow-up inquiries, and instant oral defense scorecards.*
-<p align="center">
-  <img src="docs/images/viva_interview_preview.png" alt="Socratic Viva Interview UI" width="95%" />
-</p>
+## 🗄️ Persistent Relational Database Architecture
+
+CogniTutor utilizes a zero-dependency, ACID-compliant **SQLite 3 database** with **Write-Ahead Logging (WAL)** and foreign key integrity located at `data/cognitutor.db`.
+
+| Table | Description | Primary Key / Relations |
+| :--- | :--- | :--- |
+| `documents` | Preserves all uploaded & sample curriculum materials | `doc_id (PK)`, `file_name`, `file_size_kb`, `chunk_count`, `topics_json` |
+| `chunks` | Stores all segmented text passages with foreign key integrity | `chunk_id (PK)`, `doc_id (FK)`, `text`, `topic`, `exact_citation` |
+| `quiz_attempts` | Full history of student answers, difficulty levels, and XP | `attempt_id (PK)`, `question_id`, `topic`, `is_correct`, `difficulty`, `xp` |
+| `student_profile` | Long-term mastery tracking, streaks, and unlocked badges | `user_id (PK)`, `name`, `xp`, `level`, `streak_days`, `badges_json` |
+| `chat_history` | Persistent log of all AI Tutor interactions and citations | `message_id (PK)`, `session_id`, `query`, `answer`, `citations_json` |
+| `viva_history` | Archives examiner questions, student defense transcripts & grades | `id (PK)`, `session_id`, `topic`, `student_defense`, `score`, `critique` |
+| `roadmap_progress`| Tracks completion of individual personalized milestones | `milestone_id (PK)`, `completed`, `updated_at` |
+
+*Includes built-in `/api/db/download` endpoint for 1-click database backups and offline inspection via DB Browser for SQLite.*
 
 ---
 
@@ -77,7 +133,7 @@ Built with an authentic **Notion / NotebookLM** human-crafted design system—fr
 - **🕸️ Concept Knowledge Graph (Visual Ontology)**: Interactive visual DAG of concept prerequisites with live mastery status, relationship labels, and an interactive inspection drawer.
 - **🎙️ Socratic Oral Viva Mode**: Hands-free voice interview simulator with misconception detection and university-grade oral scorecards.
 - **🗣️ Voice AI Tutor**: Built-in Web Speech API speech synthesis and speech-to-text recording.
-- **🏆 Gamification & Cohort Leaderboard**: Earn XP, level up, unlock 6 achievement badges, maintain streaks, and climb the cohort study leaderboard.
+- **🏆 Gamification & Cohort Leaderboard**: Earn XP, level up, unlock achievement badges, maintain streaks, and climb the cohort study leaderboard.
 
 ---
 
@@ -87,20 +143,23 @@ Built with an authentic **Notion / NotebookLM** human-crafted design system—fr
 graph TD
     User([Student / Scholar]) -->|Uploads PDF, PPTX, DOCX, TXT| Parser[Multi-Format Document Processor]
     Parser -->|Slide & Page Indexed Chunks| RAG[Hybrid Vector + BM25 RAG Engine]
-    RAG -->|Indexed Knowledge Base| Storage[(Document Storage)]
+    RAG -->|Indexed Knowledge Base| DB[(SQLite Relational DB - WAL Mode)]
 
     User -->|Queries Notes| Tutor[RAG AI Tutor]
-    Storage -->|Context & Exact Citations| Tutor
+    DB -->|Context & Exact Citations| Tutor
     Tutor -->|Grounded Answer + Voice Synthesis| User
+    Tutor -->|Logs Interaction| DB
 
     User -->|Concept Discovery| Graph[Concept Knowledge Graph]
     Graph -->|Prerequisite Inspection & Gaps| User
 
     User -->|Oral Technical Defense| Viva[Socratic Viva Engine]
     Viva -->|Voice Synthesis & Rubric Scoring| Comp[AI Competency Engine]
+    Viva -->|Logs Oral Defense| DB
 
     User -->|Takes Assessment| Quiz[Adaptive Quiz Generator]
     Quiz -->|MCQ & Rubric Evaluations| Comp
+    Quiz -->|Logs Attempt & XP| DB
 
     Comp -->|Live Mastery Overlays| Graph
     Comp -->|Mastery Scores| Splitter{Topic Classification}
@@ -121,7 +180,7 @@ graph TD
 
 ### Prerequisites
 - Python 3.11 or higher
-- Modern Web Browser (Google Chrome, Edge, Safari, or Firefox)
+- Modern Web Browser (Chrome, Edge, Safari, or Firefox)
 - Git
 
 ### 1. Clone the Repository
@@ -156,17 +215,22 @@ Open your browser and navigate to `http://127.0.0.1:8000`.
 ```bash
 python test_platform.py
 ```
-*(All 12 automated unit and integration tests will execute and verify system health.)*
+*(All 13 automated unit, integration, and database test suites will execute and verify system health.)*
 
 ---
 
 ## 🔌 API Endpoints Reference
 
-The backend provides **20 modular REST & SSE API endpoints**:
+The backend provides **25 modular REST & SSE API endpoints**:
 
 | Method | Endpoint | Description |
 | :---: | :--- | :--- |
-| `GET` | `/api/status` | System health, indexed files count, and chunk stats |
+| `GET` | `/api/status` | System health, indexed files count, database status, and chunk stats |
+| `GET` | `/api/db/stats` | Live SQLite metrics (size in KB, table row counts, WAL status) |
+| `GET` | `/api/db/quiz-history` | Historical log of student quiz attempts and accuracy |
+| `GET` | `/api/db/chat-history` | Previous conversation turns and grounding citations |
+| `GET` | `/api/db/viva-history` | Complete oral defense transcripts and examiner verdicts |
+| `GET` | `/api/db/download` | 1-click download of the complete `cognitutor.db` SQLite file |
 | `GET` | `/api/documents` | Pre-loaded and uploaded materials library |
 | `GET` | `/api/documents/{doc_id}/file` | Raw PDF / document byte streaming with Range requests for PDF.js |
 | `GET` | `/api/documents/{doc_id}/chunks` | Inspect raw parsed chunks with page/slide metadata |
@@ -195,9 +259,10 @@ The backend provides **20 modular REST & SSE API endpoints**:
 CogniTutor-AI-Learning-Platform/
 ├── backend/
 │   ├── config.py              # Configuration & environment settings
+│   ├── database.py            # SQLite Relational Database Manager (WAL Mode)
 │   ├── course_manager.py      # Multi-course switcher & catalog manager
 │   ├── document_processor.py  # Multi-format document parser (PDF, PPTX, DOCX, TXT)
-│   ├── storage.py             # Document store & chunk indexing
+│   ├── storage.py             # Document store & SQLite chunk indexing
 │   ├── rag_engine.py          # TF-IDF + BM25 hybrid retrieval engine
 │   ├── tutor_engine.py        # RAG Q&A & 3-level doubt solver
 │   ├── quiz_engine.py         # Adaptive quiz generator & rubric evaluators
@@ -208,6 +273,9 @@ CogniTutor-AI-Learning-Platform/
 │   ├── gamification.py        # XP, levels, badges, streaks, & leaderboard
 │   ├── create_samples.py      # Preloaded course materials generator
 │   └── main.py                # FastAPI application & route controllers
+├── data/
+│   ├── cognitutor.db          # Persistent SQLite database file
+│   └── documents_metadata.json# Synchronized document metadata cache
 ├── frontend/
 │   ├── assets/                # Brand logo & SVG favicons
 │   ├── css/
@@ -222,12 +290,17 @@ CogniTutor-AI-Learning-Platform/
 │   └── images/                # Visual previews, screenshots, & brand marks
 │       ├── logo.png
 │       ├── dashboard_preview.png
-│       ├── knowledge_graph_preview.png
-│       └── viva_interview_preview.png
+│       ├── split_screen_citations.png
+│       ├── adaptive_quiz_preview.png
+│       ├── viva_interview_preview.png
+│       └── knowledge_graph_preview.png
+├── Dockerfile                 # Production container for cloud deployments
+├── render.yaml                # 1-click Render blueprint specification
+├── Procfile                   # Process declaration for cloud platforms
 ├── sample_materials/          # Preloaded course documents (.pdf, .pptx, .docx, .txt)
 ├── requirements.txt           # Python dependencies
 ├── run.py                     # Application launcher
-└── test_platform.py           # Automated test suite (12 test suites)
+└── test_platform.py           # Automated test suite (13 test suites)
 ```
 
 ---
