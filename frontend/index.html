@@ -10,11 +10,27 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   
-  <!-- Tailwind CSS CDN -->
+  <!-- Tailwind CSS CDN with strict Class DarkMode to prevent media query leakage -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+    };
+    // Sync theme before render to eliminate flash or wrong contrast
+    (function() {
+      try {
+        const theme = localStorage.getItem('cogni_theme') || 'light';
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      } catch (e) {}
+    })();
+  </script>
   
   <!-- Human-Crafted CSS (Tier-1 Pro Design System) -->
-  <link rel="stylesheet" href="/static/css/style.css?v=8.0.0">
+  <link rel="stylesheet" href="/static/css/style.css?v=9.0.0">
   
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -1347,9 +1363,9 @@
   <div id="cogni-toast-container"></div>
 
   <!-- SCRIPTS -->
-  <script src="/static/js/api.js?v=8.0.0"></script>
-  <script src="/static/js/voice.js?v=8.0.0"></script>
-  <script src="/static/js/charts.js?v=8.0.0"></script>
-  <script src="/static/js/app.js?v=8.0.0"></script>
+  <script src="/static/js/api.js?v=9.0.0"></script>
+  <script src="/static/js/voice.js?v=9.0.0"></script>
+  <script src="/static/js/charts.js?v=9.0.0"></script>
+  <script src="/static/js/app.js?v=9.0.0"></script>
 </body>
 </html>

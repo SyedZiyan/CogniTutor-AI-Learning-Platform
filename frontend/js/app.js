@@ -100,21 +100,26 @@ function showToast(message, type = 'info') {
 }
 
 // Theme Toggle (Ultra-Clean Light Minimalist default)
-function initTheme() {
-  const savedTheme = localStorage.getItem('cogni_theme') || 'light'; // Default to clean Apple/Stripe light minimalist
-  if (savedTheme === 'dark') {
-    document.body.classList.add('dark-theme');
+function applyTheme(isDark) {
+  if (isDark) {
+    document.documentElement.classList.add('dark');
+    document.body.classList.add('dark', 'dark-theme');
   } else {
-    document.body.classList.remove('dark-theme');
+    document.documentElement.classList.remove('dark');
+    document.body.classList.remove('dark', 'dark-theme');
   }
+  localStorage.setItem('cogni_theme', isDark ? 'dark' : 'light');
   updateThemeIcon();
 }
 
+function initTheme() {
+  const savedTheme = localStorage.getItem('cogni_theme') || 'light';
+  applyTheme(savedTheme === 'dark');
+}
+
 function toggleTheme() {
-  document.body.classList.toggle('dark-theme');
-  const isDark = document.body.classList.contains('dark-theme');
-  localStorage.setItem('cogni_theme', isDark ? 'dark' : 'light');
-  updateThemeIcon();
+  const isDark = !document.documentElement.classList.contains('dark');
+  applyTheme(isDark);
   showToast(isDark ? "🌙 Dark mode enabled" : "☀️ Light mode enabled", "info");
   if (appState.activeTab === 'dashboard') {
     refreshDashboard();
@@ -124,7 +129,7 @@ function toggleTheme() {
 function updateThemeIcon() {
   const icon = document.getElementById('theme-toggle-icon');
   if (!icon) return;
-  const isDark = document.body.classList.contains('dark-theme');
+  const isDark = document.documentElement.classList.contains('dark');
   icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
   lucide.createIcons();
 }
